@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../core/constants.dart';
 import '../core/palette.dart';
 import 'components/ground.dart';
+import 'components/obstacle.dart';
 import 'components/player.dart';
 import 'game_state.dart';
 import 'systems/difficulty.dart';
@@ -34,6 +35,7 @@ class RageTapGame extends FlameGame {
   double distance = 0.0;
   double currentSpeed = C.baseSpeed;
 
+  ObstacleType? lastDeathCause;
   bool _hasDied = false;
   double _dyingTimer = 0.0;
   double _resumeStepTimer = 0.0;
@@ -56,7 +58,6 @@ class RageTapGame extends FlameGame {
     }
   }
 
-
   @override
   void update(double dt) {
     final clampedDt = dt.clamp(0.0, C.maxDt).toDouble();
@@ -67,6 +68,25 @@ class RageTapGame extends FlameGame {
       runTime += clampedDt;
       currentSpeed = Difficulty.speed(runTime);
       distance += currentSpeed * clampedDt;
+
+      // Update player physics
+      player.step(clampedDt);
+
+      // Move obstacles with current scroll speed
+      for (final obstacle in world.children.whereType<Obstacle>().toList()) {
+        obstacle.move(currentSpeed, clampedDt);
+      }
+
+
+      // Check AABB collision between player and obstacles
+      final playerHitbox = player.hitbox;
+      for (final obstacle in world.children.whereType<Obstacle>()) {
+        if (playerHitbox.overlaps(obstacle.hitbox)) {
+          die(obstacle.type);
+          break;
+        }
+      }
+
       super.update(clampedDt);
     } else if (state.value == GameState.dying) {
       _updateDying(clampedDt);
@@ -76,9 +96,19 @@ class RageTapGame extends FlameGame {
 
   void startRun() {
     if (state.value == GameState.ready) {
+      _spawnInitialTestHazard();
       state.value = GameState.playing;
       player.jump();
     }
+  }
+
+  void _spawnInitialTestHazard() {
+    // Clear any existing obstacles
+    for (final obs in world.children.whereType<Obstacle>().toList()) {
+      obs.removeFromParent();
+    }
+    // Spawn test spike at x = 600
+    world.add(Obstacle.spike(x: 600, count: 1));
   }
 
   void pause() {
@@ -108,17 +138,24 @@ class RageTapGame extends FlameGame {
     }
   }
 
-  void die() {
+  void die([ObstacleType? cause]) {
     if (_hasDied || state.value != GameState.playing) return;
     _hasDied = true;
+    lastDeathCause = cause;
     _dyingTimer = 0.0;
     state.value = GameState.dying;
+    if (kDebugMode) {
+      debugPrint('Player died. Cause: $cause');
+    }
   }
 
   void _updateDying(double dt) {
     _dyingTimer += dt;
     if (_dyingTimer >= C.hitFreezeSec + C.deathAnimSec) {
       state.value = GameState.results;
+      if (kDebugMode) {
+        debugPrint('Run ended. State -> results.');
+      }
     }
   }
 
@@ -139,8 +176,11 @@ class RageTapGame extends FlameGame {
     player.grounded = true;
     player.jumpBufferTimer = 0.0;
 
+    _spawnInitialTestHazard();
+
     state.value = GameState.playing;
   }
+
 
   void onTapDown() {
     if (state.value == GameState.ready) {
