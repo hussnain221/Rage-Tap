@@ -1,6 +1,8 @@
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/app.dart';
+import 'package:rage_tap/game/rage_tap_game.dart';
 
 void main() {
   testWidgets('App shell and route navigation test', (WidgetTester tester) async {
@@ -17,21 +19,25 @@ void main() {
     expect(find.text('PLAY'), findsOneWidget);
     expect(find.text('One tap. One mistake. One more try.'), findsOneWidget);
 
-    // Tap PLAY -> navigate to Game screen
-    await tester.tap(find.text('PLAY'));
+    // Tap Settings icon -> navigate to Settings screen
+    await tester.tap(find.byIcon(Icons.settings));
     await tester.pumpAndSettle();
-    expect(find.text('Game'), findsOneWidget);
+    expect(find.text('Settings'), findsNWidgets(2)); // AppBar title + body
 
     // Go back to Home screen
     await tester.tap(find.byType(IconButton));
     await tester.pumpAndSettle();
     expect(find.text('PLAY'), findsOneWidget);
 
-    // Tap Settings icon -> navigate to Settings screen
-    await tester.tap(find.byIcon(Icons.settings));
-    await tester.pumpAndSettle();
-    expect(find.text('Settings'), findsNWidgets(2)); // AppBar title + body
+    // Tap PLAY -> navigate to Game screen
+    await tester.tap(find.text('PLAY'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byType(GameWidget<RageTapGame>), findsOneWidget);
   });
 }
+
+
+
 
 

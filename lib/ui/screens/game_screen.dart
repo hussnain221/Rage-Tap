@@ -1,28 +1,98 @@
+import 'dart:async';
+
+import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/palette.dart';
-import '../../core/theme.dart';
+import '../../game/game_state.dart';
+import '../../game/rage_tap_game.dart';
 
-class GameScreen extends StatelessWidget {
+class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
+
+  @override
+  State<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  late final RageTapGame _game;
+  Timer? _fpsTimer;
+  double _fps = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _game = RageTapGame();
+    if (kDebugMode) {
+      _fpsTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+        if (mounted) {
+          setState(() {
+            _fps = _game.currentFps;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _fpsTimer?.cancel();
+    _game.disposeGame();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Palette.bgDeep,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Palette.cyan),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: const Center(
-        child: Text(
-          'Game',
-          style: AppTheme.h1,
-        ),
+      body: Stack(
+        children: [
+          // Bottom layer: GameWidget with pointer down listener
+          Positioned.fill(
+            child: Listener(
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (_) => _game.onTapDown(),
+              child: GameWidget(game: _game),
+            ),
+          ),
+          // Above it: SafeArea Stack for UI and overlays
+          SafeArea(
+            child: Stack(
+              children: [
+                // Debug overlay (only if kDebugMode)
+                if (kDebugMode)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: ValueListenableBuilder<GameState>(
+                      valueListenable: _game.state,
+                      builder: (context, state, _) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'FPS: ${_fps.toStringAsFixed(0)} | State: ${state.name}',
+                            style: const TextStyle(
+                              color: Palette.cyan,
+                              fontSize: 12,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
