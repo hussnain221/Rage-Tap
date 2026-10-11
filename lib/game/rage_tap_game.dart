@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../core/constants.dart';
 import '../core/palette.dart';
 import 'components/ground.dart';
+import 'components/player.dart';
 import 'game_state.dart';
 
 class RageTapGame extends FlameGame {
@@ -25,6 +26,7 @@ class RageTapGame extends FlameGame {
   final ValueNotifier<bool> isNewBest = ValueNotifier<bool>(false);
   final ValueNotifier<int> resumeCountdown = ValueNotifier<int>(0);
 
+  late final Player player;
   FpsComponent? _fpsComponent;
 
   double get currentFps => _fpsComponent?.fps ?? 0.0;
@@ -40,6 +42,8 @@ class RageTapGame extends FlameGame {
       add(_fpsComponent!);
     }
     await world.add(Ground());
+    player = Player();
+    await world.add(player);
   }
 
   @override
@@ -49,8 +53,14 @@ class RageTapGame extends FlameGame {
   }
 
   void onTapDown() {
-    // Empty for now; physics and jumping will be hooked in Prompt 1.3
+    if (state.value == GameState.ready) {
+      state.value = GameState.playing;
+      player.jump();
+    } else if (state.value == GameState.playing) {
+      player.jump();
+    }
   }
+
 
   void disposeGame() {
     state.dispose();
