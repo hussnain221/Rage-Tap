@@ -89,6 +89,31 @@ class _GameScreenState extends State<GameScreen> {
                       },
                     ),
                   ),
+                if (kDebugMode)
+                  Positioned(
+                    top: 40,
+                    left: 8,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => _game.pause(),
+                          child: const Text('Pause'),
+                        ),
+                        const SizedBox(width: 4),
+                        ElevatedButton(
+                          onPressed: () => _game.beginResume(),
+                          child: const Text('Resume'),
+                        ),
+                        const SizedBox(width: 4),
+                        ElevatedButton(
+                          onPressed: () => _game.retry(),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+
               ],
             ),
           ),
