@@ -96,20 +96,23 @@ class RageTapGame extends FlameGame {
 
   void startRun() {
     if (state.value == GameState.ready) {
-      _spawnInitialTestHazard();
+      _spawnInitialTestHazard(isRetry: false);
       state.value = GameState.playing;
       player.jump();
     }
   }
 
-  void _spawnInitialTestHazard() {
+  void _spawnInitialTestHazard({required bool isRetry}) {
     // Clear any existing obstacles
     for (final obs in world.children.whereType<Obstacle>().toList()) {
       obs.removeFromParent();
     }
-    // Spawn test spike at x = 600
-    world.add(Obstacle.spike(x: 600, count: 1));
+    // Safe opening: C.safeOpeningRetry on retry (2.0s), C.safeOpeningFirstRun on first run (3.0s)
+    final leadSec = isRetry ? C.safeOpeningRetry : C.safeOpeningFirstRun;
+    final spawnX = C.playerLeft + leadSec * C.baseSpeed;
+    world.add(Obstacle.spike(x: spawnX, count: 1));
   }
+
 
   void pause() {
     if (state.value == GameState.playing) {
@@ -176,10 +179,11 @@ class RageTapGame extends FlameGame {
     player.grounded = true;
     player.jumpBufferTimer = 0.0;
 
-    _spawnInitialTestHazard();
+    _spawnInitialTestHazard(isRetry: true);
 
     state.value = GameState.playing;
   }
+
 
 
   void onTapDown() {

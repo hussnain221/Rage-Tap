@@ -114,9 +114,39 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                   ),
 
+                // Temporary centered Retry button on results state
+                ValueListenableBuilder<GameState>(
+                  valueListenable: _game.state,
+                  builder: (context, state, _) {
+                    if (state == GameState.results) {
+                      return Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Palette.cyan,
+                            foregroundColor: Palette.bgDeep,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 18,
+                            ),
+                          ),
+                          onPressed: () => _game.retry(),
+                          child: const Text(
+                            'Retry',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
               ],
             ),
           ),
+
         ],
       ),
     );
