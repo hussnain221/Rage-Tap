@@ -129,10 +129,6 @@ class Obstacle extends PositionComponent {
         ? scrollSpeed + C.chargingExtraSpeed
         : scrollSpeed;
     x -= speed * dt;
-
-    if (x + size.x < -20) {
-      removeFromParent();
-    }
   }
 
   final Paint _paint = Paint();

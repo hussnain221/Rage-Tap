@@ -19,8 +19,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   late final RageTapGame _game;
   late final AnimationController _scorePopController;
   late final Animation<double> _scoreScaleAnimation;
+  final ValueNotifier<double> _fpsNotifier = ValueNotifier<double>(0.0);
   Timer? _fpsTimer;
-  double _fps = 0.0;
 
   @override
   void initState() {
@@ -48,9 +48,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     if (kDebugMode) {
       _fpsTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
         if (mounted) {
-          setState(() {
-            _fps = _game.currentFps;
-          });
+          _fpsNotifier.value = _game.currentFps;
         }
       });
     }
@@ -65,6 +63,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     _game.scoreBonusTrigger.removeListener(_onScoreBonus);
     _scorePopController.dispose();
     _fpsTimer?.cancel();
+    _fpsNotifier.dispose();
     _game.disposeGame();
     super.dispose();
   }
@@ -75,12 +74,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       backgroundColor: Palette.bgDeep,
       body: Stack(
         children: [
-          // Bottom layer: GameWidget with pointer down listener
+          // Bottom layer: GameWidget with pointer down listener wrapped in RepaintBoundary
           Positioned.fill(
             child: Listener(
               behavior: HitTestBehavior.opaque,
               onPointerDown: (_) => _game.onTapDown(),
-              child: GameWidget(game: _game),
+              child: RepaintBoundary(
+                child: GameWidget(game: _game),
+              ),
             ),
           ),
           // Above it: SafeArea Stack for UI and overlays
@@ -104,13 +105,18 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                             color: Colors.black54,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Text(
-                            'FPS: ${_fps.toStringAsFixed(0)} | State: ${state.name} | Seed: ${_game.seed} | Pattern: ${_game.lastPatternId ?? "none"}',
-                            style: const TextStyle(
-                              color: Palette.cyan,
-                              fontSize: 12,
-                              fontFamily: 'monospace',
-                            ),
+                          child: ValueListenableBuilder<double>(
+                            valueListenable: _fpsNotifier,
+                            builder: (context, fps, _) {
+                              return Text(
+                                'FPS: ${fps.toStringAsFixed(0)} | State: ${state.name} | Seed: ${_game.seed} | Pattern: ${_game.lastPatternId ?? "none"}',
+                                style: const TextStyle(
+                                  color: Palette.cyan,
+                                  fontSize: 12,
+                                  fontFamily: 'monospace',
+                                ),
+                              );
+                            },
                           ),
                         );
                       },
