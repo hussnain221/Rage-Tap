@@ -114,29 +114,122 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                   ),
 
-                // Temporary centered Retry button on results state
+                // Temporary HUD: Best score top-left
+                Positioned(
+                  top: kDebugMode ? 74 : 16,
+                  left: 12,
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: _game.bestScore,
+                    builder: (context, best, _) {
+                      return Text(
+                        'BEST $best',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // Temporary HUD: Score top-center
+                Positioned(
+                  top: 16,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: _game.score,
+                      builder: (context, score, _) {
+                        return Text(
+                          '$score',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                // Temporary Results UI with score, best, and retry button
                 ValueListenableBuilder<GameState>(
                   valueListenable: _game.state,
                   builder: (context, state, _) {
                     if (state == GameState.results) {
                       return Center(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Palette.cyan,
-                            foregroundColor: Palette.bgDeep,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 18,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ValueListenableBuilder<int>(
+                              valueListenable: _game.score,
+                              builder: (context, score, _) {
+                                return Text(
+                                  'SCORE: $score',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                );
+                              },
                             ),
-                          ),
-                          onPressed: () => _game.retry(),
-                          child: const Text(
-                            'Retry',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(height: 6),
+                            ValueListenableBuilder<int>(
+                              valueListenable: _game.bestScore,
+                              builder: (context, best, _) {
+                                return Text(
+                                  'BEST: $best',
+                                  style: const TextStyle(
+                                    color: Palette.yellow,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                );
+                              },
                             ),
-                          ),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: _game.isNewBest,
+                              builder: (context, isNewBest, _) {
+                                if (isNewBest) {
+                                  return const Padding(
+                                    padding: EdgeInsets.only(top: 6),
+                                    child: Text(
+                                      '★ NEW BEST! ★',
+                                      style: TextStyle(
+                                        color: Palette.yellow,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Palette.cyan,
+                                foregroundColor: Palette.bgDeep,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                  vertical: 18,
+                                ),
+                              ),
+                              onPressed: () => _game.retry(),
+                              child: const Text(
+                                'Retry',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }

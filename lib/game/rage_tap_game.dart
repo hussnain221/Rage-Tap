@@ -6,22 +6,29 @@ import 'package:flutter/material.dart';
 
 import '../core/constants.dart';
 import '../core/palette.dart';
+import '../data/save_service.dart';
 import 'components/ground.dart';
 import 'components/obstacle.dart';
 import 'components/player.dart';
 import 'game_state.dart';
 import 'systems/difficulty.dart';
+import 'systems/scoring.dart';
 
 class RageTapGame extends FlameGame {
-  RageTapGame()
-      : super(
+  RageTapGame({SaveService? saveService})
+      : _saveService = saveService ?? SaveService.instance,
+        super(
           camera: CameraComponent.withFixedResolution(
             width: C.worldW,
             height: C.worldH,
             viewfinder: Viewfinder()..anchor = Anchor.topLeft,
           ),
-        );
+        ) {
+    bestScore.value = _saveService.bestScore;
+    _bestAtStart = bestScore.value;
+  }
 
+  final SaveService _saveService;
   final ValueNotifier<GameState> state = ValueNotifier<GameState>(GameState.ready);
   final ValueNotifier<int> score = ValueNotifier<int>(0);
   final ValueNotifier<int> bestScore = ValueNotifier<int>(0);
@@ -36,6 +43,9 @@ class RageTapGame extends FlameGame {
   double currentSpeed = C.baseSpeed;
 
   ObstacleType? lastDeathCause;
+  RunResult? lastResult;
+  int _bestAtStart = 0;
+  bool _runResultRecorded = false;
   bool _hasDied = false;
   double _dyingTimer = 0.0;
   double _resumeStepTimer = 0.0;
@@ -68,6 +78,7 @@ class RageTapGame extends FlameGame {
       runTime += clampedDt;
       currentSpeed = Difficulty.speed(runTime);
       distance += currentSpeed * clampedDt;
+      score.value = Scoring.pointsFromDistance(distance);
 
       // Update player physics
       player.step(clampedDt);
@@ -96,6 +107,11 @@ class RageTapGame extends FlameGame {
 
   void startRun() {
     if (state.value == GameState.ready) {
+      _runResultRecorded = false;
+      if (_saveService.bestScore > bestScore.value) {
+        bestScore.value = _saveService.bestScore;
+      }
+      _bestAtStart = bestScore.value;
       _spawnInitialTestHazard(isRetry: false);
       state.value = GameState.playing;
       player.jump();
@@ -155,11 +171,42 @@ class RageTapGame extends FlameGame {
   void _updateDying(double dt) {
     _dyingTimer += dt;
     if (_dyingTimer >= C.hitFreezeSec + C.deathAnimSec) {
+      _finalizeRun();
       state.value = GameState.results;
       if (kDebugMode) {
         debugPrint('Run ended. State -> results.');
       }
     }
+  }
+
+  void _finalizeRun() {
+    if (_runResultRecorded) return;
+    _runResultRecorded = true;
+
+    final distanceScore = Scoring.pointsFromDistance(distance);
+    final finalScore = score.value > distanceScore ? score.value : distanceScore;
+    score.value = finalScore;
+
+    final newBest = Scoring.isNewBest(finalScore, _bestAtStart);
+    isNewBest.value = newBest;
+
+    if (newBest) {
+      _saveService.setBestIfHigher(finalScore);
+      bestScore.value = finalScore;
+    } else if (_saveService.bestScore > bestScore.value) {
+      bestScore.value = _saveService.bestScore;
+    }
+
+    _saveService.incrementTotalRuns();
+
+    lastResult = RunResult(
+      score: finalScore,
+      best: bestScore.value,
+      isNewBest: newBest,
+      deathCause: lastDeathCause,
+      nearMisses: 0,
+      durationSeconds: runTime,
+    );
   }
 
   void retry() {
@@ -172,6 +219,13 @@ class RageTapGame extends FlameGame {
     _hasDied = false;
     _dyingTimer = 0.0;
     _resumeStepTimer = 0.0;
+    _runResultRecorded = false;
+    lastResult = null;
+
+    if (_saveService.bestScore > bestScore.value) {
+      bestScore.value = _saveService.bestScore;
+    }
+    _bestAtStart = bestScore.value;
 
     // Reset player position and physics
     player.y = Player.groundY;
@@ -183,8 +237,6 @@ class RageTapGame extends FlameGame {
 
     state.value = GameState.playing;
   }
-
-
 
   void onTapDown() {
     if (state.value == GameState.ready) {
