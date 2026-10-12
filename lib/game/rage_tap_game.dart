@@ -10,9 +10,11 @@ import '../data/save_service.dart';
 import 'components/ground.dart';
 import 'components/obstacle.dart';
 import 'components/player.dart';
+import 'components/popup_text.dart';
 import 'components/telegraph.dart';
 import 'game_state.dart';
 import 'systems/difficulty.dart';
+import 'systems/near_miss.dart';
 import 'systems/scoring.dart';
 import 'systems/spawner.dart';
 
@@ -41,6 +43,7 @@ class RageTapGame extends FlameGame {
   final ValueNotifier<int> bestScore = ValueNotifier<int>(0);
   final ValueNotifier<bool> isNewBest = ValueNotifier<bool>(false);
   final ValueNotifier<int> resumeCountdown = ValueNotifier<int>(0);
+  final ValueNotifier<int> scoreBonusTrigger = ValueNotifier<int>(0);
 
   final Player player = Player();
   FpsComponent? _fpsComponent;
@@ -48,6 +51,9 @@ class RageTapGame extends FlameGame {
   double runTime = 0.0;
   double distance = 0.0;
   double currentSpeed = C.baseSpeed;
+  int bonusScore = 0;
+  int nearMissCount = 0;
+  double nearMissCooldown = 0.0;
 
   ObstacleType? lastDeathCause;
   RunResult? lastResult;
@@ -82,6 +88,9 @@ class RageTapGame extends FlameGame {
     for (final obs in world.children.whereType<Obstacle>().toList()) {
       obs.removeFromParent();
     }
+    for (final popup in world.children.whereType<PopupText>().toList()) {
+      popup.removeFromParent();
+    }
   }
 
   Obstacle _createObstacle(SpawnItem item) {
@@ -105,7 +114,7 @@ class RageTapGame extends FlameGame {
       runTime += clampedDt;
       currentSpeed = Difficulty.speed(runTime);
       distance += currentSpeed * clampedDt;
-      score.value = Scoring.pointsFromDistance(distance);
+      score.value = Scoring.pointsFromDistance(distance) + bonusScore;
 
       // Update player physics
       player.step(clampedDt);
@@ -126,10 +135,33 @@ class RageTapGame extends FlameGame {
 
       // Check AABB collision between player and obstacles
       final playerHitbox = player.hitbox;
+      bool collided = false;
       for (final obstacle in world.children.whereType<Obstacle>()) {
         if (playerHitbox.overlaps(obstacle.hitbox)) {
           die(obstacle.type);
+          collided = true;
           break;
+        }
+      }
+
+      // If no collision happened, track clearance and evaluate near-misses
+      if (!collided) {
+        if (nearMissCooldown > 0) {
+          nearMissCooldown -= clampedDt;
+        }
+
+        for (final obstacle in world.children.whereType<Obstacle>().toList()) {
+          obstacle.updateClearance(playerHitbox);
+
+          if (!obstacle.passed && obstacle.hitbox.right < playerHitbox.left) {
+            obstacle.passed = true;
+            if (NearMiss.isNearMiss(
+              minClearance: obstacle.minClearance,
+              cooldownRemaining: nearMissCooldown,
+            )) {
+              _triggerNearMiss();
+            }
+          }
         }
       }
 
@@ -140,9 +172,23 @@ class RageTapGame extends FlameGame {
     }
   }
 
+  void _triggerNearMiss() {
+    bonusScore += C.nearMissBonus;
+    nearMissCount++;
+    nearMissCooldown = C.nearMissCooldownSec;
+    score.value = Scoring.pointsFromDistance(distance) + bonusScore;
+    scoreBonusTrigger.value++;
+    world.add(PopupText(
+      initialPosition: Vector2(player.x + C.playerSize / 2, player.y - 12),
+    ));
+  }
+
   void startRun() {
     if (state.value == GameState.ready) {
       _runResultRecorded = false;
+      bonusScore = 0;
+      nearMissCount = 0;
+      nearMissCooldown = 0.0;
       if (_saveService.bestScore > bestScore.value) {
         bestScore.value = _saveService.bestScore;
       }
@@ -156,7 +202,6 @@ class RageTapGame extends FlameGame {
       player.jump();
     }
   }
-
 
   void pause() {
     if (state.value == GameState.playing) {
@@ -212,7 +257,7 @@ class RageTapGame extends FlameGame {
     _runResultRecorded = true;
 
     final distanceScore = Scoring.pointsFromDistance(distance);
-    final finalScore = score.value > distanceScore ? score.value : distanceScore;
+    final finalScore = distanceScore + bonusScore;
     score.value = finalScore;
 
     final newBest = Scoring.isNewBest(finalScore, _bestAtStart);
@@ -232,7 +277,7 @@ class RageTapGame extends FlameGame {
       best: bestScore.value,
       isNewBest: newBest,
       deathCause: lastDeathCause,
-      nearMisses: 0,
+      nearMisses: nearMissCount,
       durationSeconds: runTime,
     );
   }
@@ -241,6 +286,9 @@ class RageTapGame extends FlameGame {
     runTime = 0.0;
     distance = 0.0;
     currentSpeed = C.baseSpeed;
+    bonusScore = 0;
+    nearMissCount = 0;
+    nearMissCooldown = 0.0;
     score.value = 0;
     isNewBest.value = false;
     resumeCountdown.value = 0;
@@ -277,13 +325,12 @@ class RageTapGame extends FlameGame {
     }
   }
 
-
-
   void disposeGame() {
     state.dispose();
     score.dispose();
     bestScore.dispose();
     isNewBest.dispose();
     resumeCountdown.dispose();
+    scoreBonusTrigger.dispose();
   }
 }

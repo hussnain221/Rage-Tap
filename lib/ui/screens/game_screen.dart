@@ -15,8 +15,10 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
   late final RageTapGame _game;
+  late final AnimationController _scorePopController;
+  late final Animation<double> _scoreScaleAnimation;
   Timer? _fpsTimer;
   double _fps = 0.0;
 
@@ -24,6 +26,25 @@ class _GameScreenState extends State<GameScreen> {
   void initState() {
     super.initState();
     _game = RageTapGame();
+    _scorePopController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+    );
+    _scoreScaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.15)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.15, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 50,
+      ),
+    ]).animate(_scorePopController);
+
+    _game.scoreBonusTrigger.addListener(_onScoreBonus);
+
     if (kDebugMode) {
       _fpsTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
         if (mounted) {
@@ -35,8 +56,14 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  void _onScoreBonus() {
+    _scorePopController.forward(from: 0.0);
+  }
+
   @override
   void dispose() {
+    _game.scoreBonusTrigger.removeListener(_onScoreBonus);
+    _scorePopController.dispose();
     _fpsTimer?.cancel();
     _game.disposeGame();
     super.dispose();
@@ -139,18 +166,21 @@ class _GameScreenState extends State<GameScreen> {
                   left: 0,
                   right: 0,
                   child: Center(
-                    child: ValueListenableBuilder<int>(
-                      valueListenable: _game.score,
-                      builder: (context, score, _) {
-                        return Text(
-                          '$score',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        );
-                      },
+                    child: ScaleTransition(
+                      scale: _scoreScaleAnimation,
+                      child: ValueListenableBuilder<int>(
+                        valueListenable: _game.score,
+                        builder: (context, score, _) {
+                          return Text(
+                            '$score',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),

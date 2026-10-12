@@ -57,6 +57,18 @@ class Obstacle extends PositionComponent {
   bool passed = false;
   double minClearance = double.infinity;
 
+  void updateClearance(Rect playerHitbox) {
+    final obsHitbox = hitbox;
+    final horizontalOverlap =
+        playerHitbox.left < obsHitbox.right && playerHitbox.right > obsHitbox.left;
+    if (horizontalOverlap) {
+      final clearance = obsHitbox.top - playerHitbox.bottom;
+      if (clearance >= 0.0 && clearance < minClearance) {
+        minClearance = clearance;
+      }
+    }
+  }
+
   static double _computeWidth(ObstacleType type, int count) {
     switch (type) {
       case ObstacleType.spike:
