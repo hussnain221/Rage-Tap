@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants.dart';
-import '../../core/palette.dart';
+import '../painting/hazard_painters.dart';
 
 enum ObstacleType {
   spike,
@@ -131,7 +131,6 @@ class Obstacle extends PositionComponent {
     x -= speed * dt;
   }
 
-  final Paint _paint = Paint();
   final Paint _debugHitboxPaint = Paint()
     ..color = Colors.red
     ..style = PaintingStyle.stroke
@@ -143,21 +142,15 @@ class Obstacle extends PositionComponent {
 
     switch (type) {
       case ObstacleType.spike:
-        _paint.color = Palette.orange;
+        HazardPainters.paintSpikes(canvas, count: count);
         break;
       case ObstacleType.barrier:
-        _paint.color = Palette.magenta;
+        HazardPainters.paintBarrier(canvas);
         break;
       case ObstacleType.charging:
-        _paint.color = Palette.orange;
+        HazardPainters.paintChargingBlock(canvas);
         break;
     }
-
-    // Placeholder colored rectangle
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      _paint,
-    );
 
     // Hitbox outline in debug mode
     if (kDebugMode) {

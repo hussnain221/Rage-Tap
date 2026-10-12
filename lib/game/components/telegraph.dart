@@ -2,8 +2,8 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants.dart';
-import '../../core/palette.dart';
 import '../game_state.dart';
+import '../painting/hazard_painters.dart';
 import '../rage_tap_game.dart';
 import 'obstacle.dart';
 
@@ -14,13 +14,6 @@ class TelegraphComponent extends PositionComponent with HasGameReference<RageTap
           size: Vector2(24, 24),
           priority: 10,
         );
-
-  final Paint _trianglePaint = Paint()..color = Palette.orange;
-  final Paint _strokePaint = Paint()
-    ..color = Palette.bgDeep
-    ..strokeWidth = 2.0
-    ..strokeCap = StrokeCap.round;
-  final Paint _dotPaint = Paint()..color = Palette.bgDeep;
 
   @override
   void render(Canvas canvas) {
@@ -38,16 +31,6 @@ class TelegraphComponent extends PositionComponent with HasGameReference<RageTap
     final flashOn = (game.runTime * 12).floor() % 2 == 0;
     if (!flashOn) return;
 
-    // Draw warning triangle (24x24)
-    final path = Path()
-      ..moveTo(12, 2)
-      ..lineTo(22, 22)
-      ..lineTo(2, 22)
-      ..close();
-    canvas.drawPath(path, _trianglePaint);
-
-    // Draw exclamation mark '!'
-    canvas.drawLine(const Offset(12, 8), const Offset(12, 15), _strokePaint);
-    canvas.drawCircle(const Offset(12, 19), 1.2, _dotPaint);
+    HazardPainters.paintTelegraph(canvas, t: game.runTime);
   }
 }

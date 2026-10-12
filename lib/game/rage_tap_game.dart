@@ -86,6 +86,7 @@ class RageTapGame extends FlameGame {
 
   void _clearObstacles() {
     for (final obs in world.children.whereType<Obstacle>().toList()) {
+      obs.x = -1000;
       obs.removeFromParent();
     }
     for (final popup in world.children.whereType<PopupText>().toList()) {
@@ -121,6 +122,7 @@ class RageTapGame extends FlameGame {
 
       // Move obstacles with current scroll speed and remove off-screen
       for (final obstacle in world.children.whereType<Obstacle>().toList()) {
+        if (obstacle.isRemoving) continue;
         obstacle.move(currentSpeed, clampedDt);
         if (obstacle.x + obstacle.width < -20) {
           obstacle.removeFromParent();
@@ -137,6 +139,7 @@ class RageTapGame extends FlameGame {
       final playerHitbox = player.hitbox;
       bool collided = false;
       for (final obstacle in world.children.whereType<Obstacle>().toList()) {
+        if (obstacle.isRemoving) continue;
         if (playerHitbox.overlaps(obstacle.hitbox)) {
           die(obstacle.type);
           collided = true;
@@ -151,6 +154,7 @@ class RageTapGame extends FlameGame {
         }
 
         for (final obstacle in world.children.whereType<Obstacle>().toList()) {
+          if (obstacle.isRemoving) continue;
           obstacle.updateClearance(playerHitbox);
 
           if (!obstacle.passed && obstacle.hitbox.right < playerHitbox.left) {
