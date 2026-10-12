@@ -26,13 +26,16 @@ class Spawner {
   Spawner({
     int? seed,
     List<Pattern>? library,
+    this.enableLogging = true,
   })  : seed = seed ?? resolveSeed(),
         _random = math.Random(seed ?? resolveSeed()),
         library = library ?? PatternLibrary.patterns {
-    if (kDebugMode) {
+    if (kDebugMode && enableLogging) {
       debugPrint('Spawner initialized with seed: ${this.seed}');
     }
   }
+
+  final bool enableLogging;
 
   static int resolveSeed([int? overrideSeed]) {
     if (overrideSeed != null) return overrideSeed;
@@ -137,7 +140,7 @@ class Spawner {
       _consecutiveCount = 1;
     }
 
-    if (kDebugMode) {
+    if (kDebugMode && enableLogging) {
       debugPrint('Spawner: selected pattern ${chosen.id} (runTime: ${runTime.toStringAsFixed(1)}s, seed: $seed)');
     }
 
