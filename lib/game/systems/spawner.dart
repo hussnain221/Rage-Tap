@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/constants.dart';
 import '../components/obstacle.dart';
+import 'difficulty.dart';
 import 'pattern.dart';
 import 'pattern_library.dart';
 
@@ -66,19 +67,8 @@ class Spawner {
     }
   }
 
-  static double restMin(double t) {
-    if (t >= C.restRampSeconds) return C.restMinEnd;
-    final progress = (t / C.restRampSeconds).clamp(0.0, 1.0);
-    final val = C.restMinStart + (C.restMinEnd - C.restMinStart) * progress;
-    return val < C.restMinEnd ? C.restMinEnd : val;
-  }
-
-  static double restMax(double t) {
-    if (t >= C.restRampSeconds) return C.restMaxEnd;
-    final progress = (t / C.restRampSeconds).clamp(0.0, 1.0);
-    final val = C.restMaxStart + (C.restMaxEnd - C.restMaxStart) * progress;
-    return val < C.restMaxEnd ? C.restMaxEnd : val;
-  }
+  static double restMin(double t) => Difficulty.restGapRange(t).min;
+  static double restMax(double t) => Difficulty.restGapRange(t).max;
 
   List<SpawnItem> startRun({required bool isRetry, required double speed}) {
     reset();
@@ -93,9 +83,8 @@ class Spawner {
 
   void _prepareNextPattern({required double runTime, required double speed}) {
     _pendingPattern = pickPattern(runTime: runTime, speed: speed);
-    final rMin = restMin(runTime);
-    final rMax = restMax(runTime);
-    final restGapSec = rMin + _random.nextDouble() * (rMax - rMin);
+    final range = Difficulty.restGapRange(runTime);
+    final restGapSec = range.min + _random.nextDouble() * (range.max - range.min);
     _pendingLeadSec = math.max(restGapSec, _pendingPattern!.minLeadSeconds);
   }
 
