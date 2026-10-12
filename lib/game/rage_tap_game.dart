@@ -136,7 +136,7 @@ class RageTapGame extends FlameGame {
       // Check AABB collision between player and obstacles
       final playerHitbox = player.hitbox;
       bool collided = false;
-      for (final obstacle in world.children.whereType<Obstacle>()) {
+      for (final obstacle in world.children.whereType<Obstacle>().toList()) {
         if (playerHitbox.overlaps(obstacle.hitbox)) {
           die(obstacle.type);
           collided = true;
@@ -164,12 +164,11 @@ class RageTapGame extends FlameGame {
           }
         }
       }
-
-      super.update(clampedDt);
     } else if (state.value == GameState.dying) {
       _updateDying(clampedDt);
-      super.update(clampedDt);
     }
+
+    super.update(clampedDt);
   }
 
   void _triggerNearMiss() {

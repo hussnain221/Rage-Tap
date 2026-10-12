@@ -35,6 +35,7 @@ void main() {
     expect(fixedViewport.resolution.x, C.worldW);
     expect(fixedViewport.resolution.y, C.worldH);
 
+    expect(game.camera.world, game.world);
     game.disposeGame();
   });
 

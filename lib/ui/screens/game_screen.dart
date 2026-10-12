@@ -185,6 +185,42 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                   ),
                 ),
 
+                // Ready hint when in ready state
+                ValueListenableBuilder<GameState>(
+                  valueListenable: _game.state,
+                  builder: (context, state, _) {
+                    if (state == GameState.ready) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'READY',
+                              style: TextStyle(
+                                color: Palette.cyan,
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 4.0,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'TAP TO JUMP',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+
                 // Temporary Results UI with score, best, and retry button
                 ValueListenableBuilder<GameState>(
                   valueListenable: _game.state,
