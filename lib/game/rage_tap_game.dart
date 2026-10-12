@@ -177,6 +177,7 @@ class RageTapGame extends FlameGame {
     nearMissCooldown = C.nearMissCooldownSec;
     score.value = Scoring.pointsFromDistance(distance) + bonusScore;
     scoreBonusTrigger.value++;
+    player.triggerScared();
     world.add(PopupText(
       initialPosition: Vector2(player.x + C.playerSize / 2, player.y - 12),
     ));
@@ -188,6 +189,7 @@ class RageTapGame extends FlameGame {
       bonusScore = 0;
       nearMissCount = 0;
       nearMissCooldown = 0.0;
+      player.resetAnimation();
       if (_saveService.bestScore > bestScore.value) {
         bestScore.value = _saveService.bestScore;
       }
@@ -307,6 +309,7 @@ class RageTapGame extends FlameGame {
     player.vy = 0.0;
     player.grounded = true;
     player.jumpBufferTimer = 0.0;
+    player.resetAnimation();
     _clearObstacles();
     final initialItems = spawner.startRun(isRetry: true, speed: currentSpeed);
     for (final item in initialItems) {
