@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../core/constants.dart';
 import '../core/palette.dart';
 import '../data/save_service.dart';
+import 'components/background.dart';
 import 'components/ground.dart';
 import 'components/obstacle.dart';
 import 'components/player.dart';
@@ -77,6 +78,7 @@ class RageTapGame extends FlameGame {
       _fpsComponent = FpsComponent();
       add(_fpsComponent!);
     }
+    await world.add(Background());
     await world.add(Ground());
     if (!player.isMounted) {
       await world.add(player);
