@@ -10,6 +10,7 @@ import '../data/save_service.dart';
 import 'components/background.dart';
 import 'components/ground.dart';
 import 'components/obstacle.dart';
+import 'components/particles.dart';
 import 'components/player.dart';
 import 'components/popup_text.dart';
 import 'components/telegraph.dart';
@@ -47,6 +48,7 @@ class RageTapGame extends FlameGame {
   final ValueNotifier<int> scoreBonusTrigger = ValueNotifier<int>(0);
 
   final Player player = Player();
+  final ParticleEffects particles = ParticleEffects();
   FpsComponent? _fpsComponent;
 
   double runTime = 0.0;
@@ -83,6 +85,7 @@ class RageTapGame extends FlameGame {
     if (!player.isMounted) {
       await world.add(player);
     }
+    await world.add(particles);
     await world.add(TelegraphComponent());
   }
 
@@ -237,12 +240,20 @@ class RageTapGame extends FlameGame {
     }
   }
 
+  void spawnLandingDust(Vector2 position) {
+    particles.spawnLandingDust(position);
+  }
+
   void die([ObstacleType? cause]) {
     if (_hasDied || state.value != GameState.playing) return;
     _hasDied = true;
     lastDeathCause = cause;
     _dyingTimer = 0.0;
     state.value = GameState.dying;
+    player.isDead = true;
+    particles.triggerDeathEffect(
+      Vector2(player.x + C.playerSize / 2, player.y + C.playerSize / 2),
+    );
     if (kDebugMode) {
       debugPrint('Player died. Cause: $cause');
     }
@@ -316,6 +327,7 @@ class RageTapGame extends FlameGame {
     player.grounded = true;
     player.jumpBufferTimer = 0.0;
     player.resetAnimation();
+    particles.clear();
     _clearObstacles();
     final initialItems = spawner.startRun(isRetry: true, speed: currentSpeed);
     for (final item in initialItems) {
@@ -334,6 +346,7 @@ class RageTapGame extends FlameGame {
   }
 
   void disposeGame() {
+    particles.clear();
     state.dispose();
     score.dispose();
     bestScore.dispose();

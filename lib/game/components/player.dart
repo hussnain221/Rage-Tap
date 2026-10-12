@@ -25,6 +25,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
   bool _isTakeoff = false;
   double _scaredTimer = 0.0;
   double animTime = 0.0;
+  bool isDead = false;
   ZapExpression? overrideExpression;
 
   final Paint _debugHitboxPaint = Paint()
@@ -43,6 +44,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
 
   ZapExpression get currentExpression {
     if (overrideExpression != null) return overrideExpression!;
+    if (isDead) return ZapExpression.dead;
     if (isMounted) {
       final state = game.state.value;
       if (state == GameState.dying || state == GameState.results) {
@@ -95,6 +97,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
     _squashTimer = 0.0;
     _scaredTimer = 0.0;
     animTime = 0.0;
+    isDead = false;
   }
 
   void jump() {
@@ -133,6 +136,9 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
         vy = 0.0;
         grounded = true;
         triggerLanding();
+        if (isMounted) {
+          game.spawnLandingDust(Vector2(x + C.playerSize / 2, C.groundTopY));
+        }
 
         if (jumpBufferTimer > 0) {
           jump();
