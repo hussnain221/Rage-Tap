@@ -7,6 +7,14 @@ import 'data/save_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FLUTTER ERROR: ${details.exceptionAsString()}');
+    if (details.stack != null) {
+      debugPrint('STACK: ${details.stack}');
+    }
+  };
+
   await SaveService.instance.init();
 
   await SystemChrome.setPreferredOrientations([

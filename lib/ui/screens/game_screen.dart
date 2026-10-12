@@ -72,22 +72,23 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Palette.bgDeep,
-      body: Stack(
-        children: [
-          // Bottom layer: GameWidget with pointer down listener wrapped in RepaintBoundary
-          Positioned.fill(
-            child: Listener(
-              behavior: HitTestBehavior.opaque,
-              onPointerDown: (_) => _game.onTapDown(),
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => _game.onTapDown(),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Bottom layer: GameWidget wrapped in RepaintBoundary
+            Positioned.fill(
               child: RepaintBoundary(
                 child: GameWidget(game: _game),
               ),
             ),
-          ),
-          // Above it: SafeArea Stack for UI and overlays
-          SafeArea(
-            child: Stack(
-              children: [
+            // Above it: SafeArea Stack for UI and overlays
+            SafeArea(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
                 // Debug overlay (only if kDebugMode)
                 if (kDebugMode)
                   Positioned(
@@ -311,9 +312,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               ],
             ),
           ),
-
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
