@@ -68,13 +68,15 @@ void main() {
       final game = RageTapGame();
       game.startRun();
 
-      // Remove the single test obstacle so player runs freely without colliding prematurely
-      for (final obs in game.world.children.whereType<Obstacle>().toList()) {
-        obs.removeFromParent();
+      // Advance 10s clearing spawned obstacles so player runs freely without colliding
+      double elapsed = 0.0;
+      while (elapsed < 10.0) {
+        for (final obs in game.world.children.whereType<Obstacle>().toList()) {
+          obs.removeFromParent();
+        }
+        game.update(1 / 60);
+        elapsed += 1 / 60;
       }
-
-      // Run until score exceeds 50 (takes ~10s of run time)
-      _advance(game, 10.0);
       expect(game.score.value, greaterThan(50));
       final finalScore = game.score.value;
 

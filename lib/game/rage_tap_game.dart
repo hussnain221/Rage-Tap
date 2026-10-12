@@ -13,10 +13,15 @@ import 'components/player.dart';
 import 'game_state.dart';
 import 'systems/difficulty.dart';
 import 'systems/scoring.dart';
+import 'systems/spawner.dart';
 
 class RageTapGame extends FlameGame {
-  RageTapGame({SaveService? saveService})
-      : _saveService = saveService ?? SaveService.instance,
+  RageTapGame({
+    SaveService? saveService,
+    Spawner? spawner,
+    int? seed,
+  })  : _saveService = saveService ?? SaveService.instance,
+        spawner = spawner ?? Spawner(seed: seed),
         super(
           camera: CameraComponent.withFixedResolution(
             width: C.worldW,
@@ -29,6 +34,7 @@ class RageTapGame extends FlameGame {
   }
 
   final SaveService _saveService;
+  final Spawner spawner;
   final ValueNotifier<GameState> state = ValueNotifier<GameState>(GameState.ready);
   final ValueNotifier<int> score = ValueNotifier<int>(0);
   final ValueNotifier<int> bestScore = ValueNotifier<int>(0);
@@ -51,6 +57,8 @@ class RageTapGame extends FlameGame {
   double _resumeStepTimer = 0.0;
 
   double get currentFps => _fpsComponent?.fps ?? 0.0;
+  int get seed => spawner.seed;
+  String? get lastPatternId => spawner.lastPatternId;
 
   @override
   Color backgroundColor() => Palette.bgDeep;
@@ -65,6 +73,23 @@ class RageTapGame extends FlameGame {
     await world.add(Ground());
     if (!player.isMounted) {
       await world.add(player);
+    }
+  }
+
+  void _clearObstacles() {
+    for (final obs in world.children.whereType<Obstacle>().toList()) {
+      obs.removeFromParent();
+    }
+  }
+
+  Obstacle _createObstacle(SpawnItem item) {
+    switch (item.type) {
+      case ObstacleType.spike:
+        return Obstacle.spike(x: item.x, count: item.count);
+      case ObstacleType.barrier:
+        return Obstacle.barrier(x: item.x);
+      case ObstacleType.charging:
+        return Obstacle.charging(x: item.x);
     }
   }
 
@@ -83,11 +108,19 @@ class RageTapGame extends FlameGame {
       // Update player physics
       player.step(clampedDt);
 
-      // Move obstacles with current scroll speed
+      // Move obstacles with current scroll speed and remove off-screen
       for (final obstacle in world.children.whereType<Obstacle>().toList()) {
         obstacle.move(currentSpeed, clampedDt);
+        if (obstacle.x + obstacle.width < -20) {
+          obstacle.removeFromParent();
+        }
       }
 
+      // Spawn upcoming obstacles
+      final newItems = spawner.update(clampedDt, currentSpeed, runTime);
+      for (final item in newItems) {
+        world.add(_createObstacle(item));
+      }
 
       // Check AABB collision between player and obstacles
       final playerHitbox = player.hitbox;
@@ -112,21 +145,14 @@ class RageTapGame extends FlameGame {
         bestScore.value = _saveService.bestScore;
       }
       _bestAtStart = bestScore.value;
-      _spawnInitialTestHazard(isRetry: false);
+      _clearObstacles();
+      final initialItems = spawner.startRun(isRetry: false, speed: currentSpeed);
+      for (final item in initialItems) {
+        world.add(_createObstacle(item));
+      }
       state.value = GameState.playing;
       player.jump();
     }
-  }
-
-  void _spawnInitialTestHazard({required bool isRetry}) {
-    // Clear any existing obstacles
-    for (final obs in world.children.whereType<Obstacle>().toList()) {
-      obs.removeFromParent();
-    }
-    // Safe opening: C.safeOpeningRetry on retry (2.0s), C.safeOpeningFirstRun on first run (3.0s)
-    final leadSec = isRetry ? C.safeOpeningRetry : C.safeOpeningFirstRun;
-    final spawnX = C.playerLeft + leadSec * C.baseSpeed;
-    world.add(Obstacle.spike(x: spawnX, count: 1));
   }
 
 
@@ -232,8 +258,11 @@ class RageTapGame extends FlameGame {
     player.vy = 0.0;
     player.grounded = true;
     player.jumpBufferTimer = 0.0;
-
-    _spawnInitialTestHazard(isRetry: true);
+    _clearObstacles();
+    final initialItems = spawner.startRun(isRetry: true, speed: currentSpeed);
+    for (final item in initialItems) {
+      world.add(_createObstacle(item));
+    }
 
     state.value = GameState.playing;
   }

@@ -78,7 +78,7 @@ class _GameScreenState extends State<GameScreen> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'FPS: ${_fps.toStringAsFixed(0)} | State: ${state.name}',
+                            'FPS: ${_fps.toStringAsFixed(0)} | State: ${state.name} | Seed: ${_game.seed} | Pattern: ${_game.lastPatternId ?? "none"}',
                             style: const TextStyle(
                               color: Palette.cyan,
                               fontSize: 12,
