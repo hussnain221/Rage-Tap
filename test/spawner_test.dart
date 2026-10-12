@@ -128,5 +128,41 @@ void main() {
         }
       }
     });
+    test('C1 pattern is never picked directly after another C1', () {
+      final spawner = Spawner(seed: 42);
+      String? lastId;
+
+      for (int i = 0; i < 200; i++) {
+        final pattern = spawner.pickPattern(runTime: 30.0, speed: C.baseSpeed);
+        if (lastId == 'C1') {
+          expect(pattern.id, isNot('C1'), reason: 'C1 was picked immediately after C1');
+        }
+        lastId = pattern.id;
+      }
+    });
+
+    test('C1 pattern spawns at telegraphX (360 + 0.7 * chargingSpeed)', () {
+      final spawner = Spawner(seed: 12345);
+      const speed = 190.0;
+      const chargingSpeed = speed + C.chargingExtraSpeed;
+      final expectedTelegraphX = C.worldW + C.chargingTelegraphSec * chargingSpeed; // 535.0
+
+      // Run until a charging block is spawned
+      const dt = 1 / 60;
+      SpawnItem? chargingItem;
+      for (int i = 0; i < 2500; i++) {
+        final items = spawner.update(dt, speed, 25.0 + i * dt);
+        for (final item in items) {
+          if (item.type == ObstacleType.charging) {
+            chargingItem = item;
+            break;
+          }
+        }
+        if (chargingItem != null) break;
+      }
+
+      expect(chargingItem, isNotNull);
+      expect(chargingItem!.x, expectedTelegraphX);
+    });
   });
 }

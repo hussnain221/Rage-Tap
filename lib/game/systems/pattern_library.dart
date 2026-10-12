@@ -90,6 +90,42 @@ class PatternLibrary {
     ],
   );
 
+  static const Pattern c1 = Pattern(
+    id: 'C1',
+    minSpeed: 190,
+    tierStart: 24,
+    weight: 2,
+    minLeadSeconds: 1.8,
+    items: [
+      PatternItem(type: ObstacleType.charging, count: 1, dxSeconds: 0),
+    ],
+  );
+
+  // Tier 5 (t >= 36s)
+  static const Pattern s1b1s1 = Pattern(
+    id: 'S1B1S1',
+    minSpeed: 190,
+    tierStart: 36,
+    weight: 1,
+    items: [
+      PatternItem(type: ObstacleType.spike, count: 1, dxSeconds: 0),
+      PatternItem(type: ObstacleType.barrier, count: 1, dxSeconds: 1.25),
+      PatternItem(type: ObstacleType.spike, count: 1, dxSeconds: 2.50),
+    ],
+  );
+
+  static const Pattern b1s2b1 = Pattern(
+    id: 'B1S2B1',
+    minSpeed: 190,
+    tierStart: 36,
+    weight: 1,
+    items: [
+      PatternItem(type: ObstacleType.barrier, count: 1, dxSeconds: 0),
+      PatternItem(type: ObstacleType.spike, count: 2, dxSeconds: 1.30),
+      PatternItem(type: ObstacleType.barrier, count: 1, dxSeconds: 2.60),
+    ],
+  );
+
   static const List<Pattern> patterns = [
     s1,
     s2,
@@ -99,5 +135,8 @@ class PatternLibrary {
     s2s1,
     b1b1,
     s3,
+    c1,
+    s1b1s1,
+    b1s2b1,
   ];
 }

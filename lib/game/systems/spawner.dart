@@ -51,6 +51,9 @@ class Spawner {
   String? lastPatternId;
   int _consecutiveCount = 0;
   double _lastHazardTrailingX = 0.0;
+  ObstacleType? _lastHazardType;
+  Pattern? _pendingPattern;
+  double _pendingLeadSec = 0.0;
 
   static double computeItemWidth(ObstacleType type, int count) {
     switch (type) {
@@ -83,24 +86,55 @@ class Spawner {
     final firstX = math.max(C.worldW + 40, C.playerLeft + leadSec * speed);
 
     final pattern = pickPattern(runTime: 0.0, speed: speed);
-    return _generatePatternItems(pattern, firstX, speed);
+    final items = _generatePatternItems(pattern, firstX, speed);
+    _prepareNextPattern(runTime: 0.0, speed: speed);
+    return items;
+  }
+
+  void _prepareNextPattern({required double runTime, required double speed}) {
+    _pendingPattern = pickPattern(runTime: runTime, speed: speed);
+    final rMin = restMin(runTime);
+    final rMax = restMax(runTime);
+    final restGapSec = rMin + _random.nextDouble() * (rMax - rMin);
+    _pendingLeadSec = math.max(restGapSec, _pendingPattern!.minLeadSeconds);
   }
 
   List<SpawnItem> update(double dt, double currentSpeed, double runTime) {
-    _lastHazardTrailingX -= currentSpeed * dt;
+    final lastSpeed = _lastHazardType == ObstacleType.charging
+        ? currentSpeed + C.chargingExtraSpeed
+        : currentSpeed;
+    _lastHazardTrailingX -= lastSpeed * dt;
     final spawned = <SpawnItem>[];
 
-    // Spawn ahead of the screen whenever the last pattern's trailing edge is approaching
-    while (_lastHazardTrailingX <= C.worldW + 200) {
-      final rMin = restMin(runTime);
-      final rMax = restMax(runTime);
-      final restGapSec = rMin + _random.nextDouble() * (rMax - rMin);
-      final restGapPx = restGapSec * currentSpeed;
-      final startX = math.max(C.worldW + 40, _lastHazardTrailingX + restGapPx);
+    if (_pendingPattern == null) {
+      _prepareNextPattern(runTime: runTime, speed: currentSpeed);
+    }
 
-      final pattern = pickPattern(runTime: runTime, speed: currentSpeed);
-      final items = _generatePatternItems(pattern, startX, currentSpeed);
-      spawned.addAll(items);
+    while (true) {
+      final p = _pendingPattern!;
+      final minGapPx = _pendingLeadSec * currentSpeed;
+
+      if (p.id == 'C1') {
+        final chargingSpeed = currentSpeed + C.chargingExtraSpeed;
+        final telegraphX = C.worldW + C.chargingTelegraphSec * chargingSpeed;
+        if (_lastHazardTrailingX + minGapPx <= telegraphX) {
+          final items = _generatePatternItems(p, telegraphX, currentSpeed);
+          spawned.addAll(items);
+          _prepareNextPattern(runTime: runTime, speed: currentSpeed);
+        } else {
+          break;
+        }
+      } else {
+        final targetX = _lastHazardTrailingX + minGapPx;
+        if (targetX <= C.worldW + 200) {
+          final startX = math.max(C.worldW + 40, targetX);
+          final items = _generatePatternItems(p, startX, currentSpeed);
+          spawned.addAll(items);
+          _prepareNextPattern(runTime: runTime, speed: currentSpeed);
+        } else {
+          break;
+        }
+      }
     }
 
     return spawned;
@@ -111,6 +145,14 @@ class Spawner {
     var available = library.where((p) => runTime >= p.tierStart && speed >= p.minSpeed).toList();
     if (available.isEmpty) {
       available = [library.first];
+    }
+
+    // C1 may never directly follow another C1
+    if (lastPatternId == 'C1') {
+      final withoutC1 = available.where((p) => p.id != 'C1').toList();
+      if (withoutC1.isNotEmpty) {
+        available = withoutC1;
+      }
     }
 
     // Avoid same pattern more than twice in a row if alternatives exist
@@ -166,6 +208,7 @@ class Spawner {
     }
 
     _lastHazardTrailingX = maxTrailing;
+    _lastHazardType = pattern.items.last.type;
     return items;
   }
 
@@ -173,5 +216,8 @@ class Spawner {
     lastPatternId = null;
     _consecutiveCount = 0;
     _lastHazardTrailingX = 0.0;
+    _lastHazardType = null;
+    _pendingPattern = null;
+    _pendingLeadSec = 0.0;
   }
 }

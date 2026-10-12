@@ -10,6 +10,7 @@ import '../data/save_service.dart';
 import 'components/ground.dart';
 import 'components/obstacle.dart';
 import 'components/player.dart';
+import 'components/telegraph.dart';
 import 'game_state.dart';
 import 'systems/difficulty.dart';
 import 'systems/scoring.dart';
@@ -74,6 +75,7 @@ class RageTapGame extends FlameGame {
     if (!player.isMounted) {
       await world.add(player);
     }
+    await world.add(TelegraphComponent());
   }
 
   void _clearObstacles() {

@@ -53,10 +53,13 @@ void main() {
 
         // Move active hazards
         for (final h in activeHazards) {
-          h.x -= speed * dt;
+          final hSpeed = h.type == ObstacleType.charging
+              ? speed + C.chargingExtraSpeed
+              : speed;
+          h.x -= hSpeed * dt;
           if (h.arrivalTime == null && h.x <= playerHitboxRight) {
             h.arrivalTime = simTime;
-            h.arrivalSpeed = speed;
+            h.arrivalSpeed = hSpeed;
             arrivedHazards.add(h);
           }
         }
