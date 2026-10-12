@@ -49,7 +49,7 @@ void main() {
       expect(retryItems.first.x, greaterThanOrEqualTo(C.worldW + 40));
     });
 
-    test('Tier unlock: at t < 8s only S1 is chosen; at t >= 8s S2 is also unlocked', () {
+    test('Tier unlock: at t < 8s only S1 is chosen; at t >= 8s S2 and B1 unlock', () {
       final spawner = Spawner(seed: 999);
 
       // At t = 0 to 7.9s, only S1 (spikes count 1) is unlocked
@@ -57,18 +57,41 @@ void main() {
         final pattern = spawner.pickPattern(runTime: t, speed: C.baseSpeed);
         expect(pattern.id, 'S1');
         expect(pattern.items.first.count, 1);
+        expect(pattern.items.first.type, ObstacleType.spike);
       }
 
-      // At t >= 8.0s, S2 (spikes count 2) unlocks
+      // At t >= 8.0s, B1 and S2 unlock
       bool s2Seen = false;
-      for (int i = 0; i < 20; i++) {
+      bool b1Seen = false;
+      for (int i = 0; i < 40; i++) {
         final pattern = spawner.pickPattern(runTime: 10.0, speed: C.baseSpeed);
-        if (pattern.id == 'S2') {
-          s2Seen = true;
-          expect(pattern.items.first.count, 2);
-        }
+        if (pattern.id == 'S2') s2Seen = true;
+        if (pattern.id == 'B1') b1Seen = true;
       }
       expect(s2Seen, isTrue);
+      expect(b1Seen, isTrue);
+    });
+
+    test('S3 requires minSpeed 255 and t >= 24s', () {
+      final spawner = Spawner(seed: 123);
+
+      // At t = 25s but speed = 250 px/s, S3 must NOT be selected
+      for (int i = 0; i < 20; i++) {
+        final pattern = spawner.pickPattern(runTime: 25.0, speed: 250.0);
+        expect(pattern.id != 'S3', isTrue);
+      }
+
+      // At t = 25s and speed = 260 px/s (>= 255), S3 can be selected
+      bool s3Seen = false;
+      for (int i = 0; i < 60; i++) {
+        final pattern = spawner.pickPattern(runTime: 25.0, speed: 260.0);
+        if (pattern.id == 'S3') {
+          s3Seen = true;
+          expect(pattern.items.first.count, 3);
+          break;
+        }
+      }
+      expect(s3Seen, isTrue);
     });
 
     test('Consecutive rule: avoids picking same pattern more than twice in a row', () {
@@ -76,7 +99,7 @@ void main() {
 
       String? lastId;
       int consecutive = 0;
-      // Test 100 selections at t = 10s (where both S1 and S2 are available)
+      // Test 100 selections at t = 10s (where S1, S2, B1 are available)
       for (int i = 0; i < 100; i++) {
         final pattern = spawner.pickPattern(runTime: 10.0, speed: C.baseSpeed);
         if (pattern.id == lastId) {
@@ -101,7 +124,7 @@ void main() {
         final items = spawner.update(dt, C.baseSpeed, i * dt);
         for (final item in items) {
           expect(item.x, greaterThanOrEqualTo(C.worldW + 40));
-          expect(item.type, ObstacleType.spike);
+          expect([ObstacleType.spike, ObstacleType.barrier], contains(item.type));
         }
       }
     });
