@@ -10,6 +10,7 @@ import '../../game/rage_tap_game.dart';
 import '../widgets/hud.dart';
 import '../widgets/pause_overlay.dart';
 import '../widgets/ready_hint.dart';
+import '../widgets/results_overlay.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -153,83 +154,12 @@ class _GameScreenState extends State<GameScreen> {
                       },
                     ),
 
-                    // Temporary Results UI with score, best, and retry button (until Prompt 3.7)
+                    // Results Overlay (shown when state == GameState.results)
                     ValueListenableBuilder<GameState>(
                       valueListenable: _game.state,
                       builder: (context, state, _) {
                         if (state == GameState.results) {
-                          return Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ValueListenableBuilder<int>(
-                                  valueListenable: _game.score,
-                                  builder: (context, score, _) {
-                                    return Text(
-                                      'SCORE: $score',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 6),
-                                ValueListenableBuilder<int>(
-                                  valueListenable: _game.bestScore,
-                                  builder: (context, best, _) {
-                                    return Text(
-                                      'BEST: $best',
-                                      style: const TextStyle(
-                                        color: Palette.yellow,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  },
-                                ),
-                                ValueListenableBuilder<bool>(
-                                  valueListenable: _game.isNewBest,
-                                  builder: (context, isNewBest, _) {
-                                    if (isNewBest) {
-                                      return const Padding(
-                                        padding: EdgeInsets.only(top: 6),
-                                        child: Text(
-                                          '★ NEW BEST! ★',
-                                          style: TextStyle(
-                                            color: Palette.yellow,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    return const SizedBox.shrink();
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Palette.cyan,
-                                    foregroundColor: Palette.bgDeep,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 40,
-                                      vertical: 18,
-                                    ),
-                                  ),
-                                  onPressed: () => _game.retry(),
-                                  child: const Text(
-                                    'Retry',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
+                          return ResultsOverlay(game: _game);
                         }
                         return const SizedBox.shrink();
                       },

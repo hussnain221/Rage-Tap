@@ -13,9 +13,8 @@ void main() {
     await SaveService.instance.init();
   });
 
-  testWidgets('HomeScreen renders all elements and navigates', (tester) async {
+  testWidgets('HomeScreen renders all elements and navigates to play', (tester) async {
     bool playNavigated = false;
-    bool settingsNavigated = false;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -25,10 +24,6 @@ void main() {
           '/game': (context) {
             playNavigated = true;
             return const Scaffold(body: Text('GAME_SCREEN'));
-          },
-          '/settings': (context) {
-            settingsNavigated = true;
-            return const Scaffold(body: Text('SETTINGS_SCREEN'));
           },
         },
       ),
@@ -47,6 +42,27 @@ void main() {
     await tester.tap(find.text('PLAY'));
     await tester.pumpAndSettle();
     expect(playNavigated, isTrue);
+  });
+
+  testWidgets('HomeScreen settings button navigates to /settings', (tester) async {
+    bool settingsNavigated = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        initialRoute: '/home',
+        routes: {
+          '/home': (context) => const HomeScreen(),
+          '/settings': (context) {
+            settingsNavigated = true;
+            return const Scaffold(body: Text('SETTINGS_SCREEN'));
+          },
+        },
+      ),
+    );
+
+    await tester.tap(find.byType(NeonIconButton));
+    await tester.pumpAndSettle();
+    expect(settingsNavigated, isTrue);
   });
 
   testWidgets('HomeScreen does not overflow on small screen 320x568', (tester) async {

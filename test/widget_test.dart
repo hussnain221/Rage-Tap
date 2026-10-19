@@ -18,7 +18,6 @@ void main() {
     // Wait for splash timer (800ms) and route transition (180ms)
     await tester.pump(const Duration(milliseconds: 900));
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
 
     // Now on Home screen
     expect(find.text('PLAY'), findsOneWidget);
@@ -26,12 +25,14 @@ void main() {
 
     // Tap Settings icon -> navigate to Settings screen
     await tester.tap(find.byIcon(Icons.settings));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Settings'), findsNWidgets(2)); // AppBar title + body
 
     // Go back to Home screen
     await tester.tap(find.byType(IconButton));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('PLAY'), findsOneWidget);
 
     // Tap PLAY -> navigate to Game screen

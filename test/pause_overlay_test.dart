@@ -4,7 +4,6 @@ import 'package:rage_tap/core/constants.dart';
 import 'package:rage_tap/data/save_service.dart';
 import 'package:rage_tap/game/game_state.dart';
 import 'package:rage_tap/game/rage_tap_game.dart';
-import 'package:rage_tap/ui/widgets/neon_button.dart';
 import 'package:rage_tap/ui/widgets/pause_overlay.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

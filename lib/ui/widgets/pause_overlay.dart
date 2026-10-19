@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/palette.dart';
 import '../../core/theme.dart';
 import '../../data/save_service.dart';
-import '../../game/game_state.dart';
 import '../../game/rage_tap_game.dart';
 import 'neon_button.dart';
 
