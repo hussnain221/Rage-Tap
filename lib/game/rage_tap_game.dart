@@ -208,6 +208,9 @@ class RageTapGame extends FlameGame {
       for (final item in initialItems) {
         world.add(_createObstacle(item));
       }
+      if (!_saveService.firstRunDone) {
+        _saveService.setFirstRunDone(true);
+      }
       state.value = GameState.playing;
       player.jump();
     }

@@ -8,6 +8,7 @@ import '../../core/palette.dart';
 import '../../game/game_state.dart';
 import '../../game/rage_tap_game.dart';
 import '../widgets/hud.dart';
+import '../widgets/ready_hint.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -118,37 +119,12 @@ class _GameScreenState extends State<GameScreen> {
                         ),
                       ),
 
-                    // Ready hint when in ready state (until Prompt 3.5 replaces it)
+                    // Ready hint when in ready state
                     ValueListenableBuilder<GameState>(
                       valueListenable: _game.state,
                       builder: (context, state, _) {
                         if (state == GameState.ready) {
-                          return Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  'READY',
-                                  style: TextStyle(
-                                    color: Palette.cyan,
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 4.0,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'TAP TO JUMP',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
+                          return const ReadyHint();
                         }
                         return const SizedBox.shrink();
                       },

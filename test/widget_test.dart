@@ -39,14 +39,14 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.byType(GameWidget<RageTapGame>), findsOneWidget);
-    expect(find.text('READY'), findsOneWidget);
+    expect(find.text('TAP TO JUMP'), findsOneWidget);
 
     // Tap on game screen to start playing
     await tester.tapAt(const Offset(200, 400));
     await tester.pump();
 
-    // In playing state: READY hint is gone, but BEST score is STILL VISIBLE!
-    expect(find.text('READY'), findsNothing);
+    // In playing state: TAP TO JUMP hint is gone, but BEST score is STILL VISIBLE!
+    expect(find.text('TAP TO JUMP'), findsNothing);
     expect(find.textContaining('BEST'), findsOneWidget);
 
     // Pump frames during playing state
