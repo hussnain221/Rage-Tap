@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import '../../audio/audio_service.dart';
 import '../../core/palette.dart';
 import '../../core/theme.dart';
 import '../../game/rage_tap_game.dart';
@@ -83,6 +84,7 @@ class _ResultsOverlayState extends State<ResultsOverlay>
     );
     if (isNewBest) {
       _confettiController.forward();
+      AudioService.instance.playNewBest();
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../audio/audio_service.dart';
 import '../../core/constants.dart';
 import '../game_state.dart';
 import '../painting/zap_painter.dart';
@@ -106,6 +107,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
       grounded = false;
       jumpBufferTimer = 0.0;
       triggerTakeoff();
+      AudioService.instance.playJump();
     } else {
       jumpBufferTimer = C.jumpBufferSec;
     }
@@ -136,6 +138,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
         vy = 0.0;
         grounded = true;
         triggerLanding();
+        AudioService.instance.playLand();
         if (isMounted) {
           game.spawnLandingDust(Vector2(x + C.playerSize / 2, C.groundTopY));
         }

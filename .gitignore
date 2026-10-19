@@ -9,8 +9,8 @@
 .buildlog/
 .history
 .svn/
-.swiftpm/
 migrate_working_dir/
+[0-9a-fA-F]*-*-*-*-*/
 
 # IntelliJ related
 *.iml

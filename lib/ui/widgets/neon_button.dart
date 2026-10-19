@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../audio/audio_service.dart';
 import '../../core/palette.dart';
 import '../../core/theme.dart';
 
@@ -69,6 +70,8 @@ class _NeonButtonState extends State<NeonButton> {
 
   void _onTapDown(TapDownDetails _) {
     if (widget.onPressed == null) return;
+    AudioService.instance.playClick();
+    HapticsService.buttonPress();
     setState(() => _isPressed = true);
   }
 
@@ -201,6 +204,8 @@ class _NeonIconButtonState extends State<NeonIconButton> {
 
   void _onTapDown(TapDownDetails _) {
     if (widget.onPressed == null) return;
+    AudioService.instance.playClick();
+    HapticsService.buttonPress();
     setState(() => _isPressed = true);
   }
 

@@ -4,6 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../audio/audio_service.dart';
 import '../core/constants.dart';
 import '../core/palette.dart';
 import '../data/save_service.dart';
@@ -181,6 +182,8 @@ class RageTapGame extends FlameGame {
   }
 
   void _triggerNearMiss() {
+    AudioService.instance.playNearMiss();
+    HapticsService.nearMiss();
     bonusScore += C.nearMissBonus;
     nearMissCount++;
     nearMissCooldown = C.nearMissCooldownSec;
@@ -249,6 +252,8 @@ class RageTapGame extends FlameGame {
 
   void die([ObstacleType? cause]) {
     if (_hasDied || state.value != GameState.playing) return;
+    AudioService.instance.playHit();
+    HapticsService.hit();
     _hasDied = true;
     lastDeathCause = cause;
     _dyingTimer = 0.0;

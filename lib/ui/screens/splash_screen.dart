@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../audio/audio_service.dart';
 import '../../core/palette.dart';
 import '../../data/save_service.dart';
 import '../widgets/logo.dart';
@@ -52,10 +53,20 @@ class _SplashScreenState extends State<SplashScreen>
       }
     }();
 
+    final initAudio = () async {
+      try {
+        await AudioService.instance.init();
+      } catch (e, st) {
+        if (kDebugMode) {
+          debugPrint('AudioService init warning in splash: $e\n$st');
+        }
+      }
+    }();
+
     try {
-      await Future.wait([minWait, initTask]).timeout(
+      await Future.wait([minWait, initTask, initAudio]).timeout(
         const Duration(milliseconds: 1200),
-        onTimeout: () => [null, null],
+        onTimeout: () => [null, null, null],
       );
     } catch (_) {
       // Continue with defaults on any error or timeout
