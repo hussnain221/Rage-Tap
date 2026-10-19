@@ -19,11 +19,27 @@ class _SfxChannel {
   final List<AudioPlayer> _players = [];
   int _cursor = 0;
 
+  static final AudioContext _gameAudioContext = AudioContext(
+    android: const AudioContextAndroid(
+      isSpeakerphoneOn: false,
+      stayAwake: false,
+      contentType: AndroidContentType.sonification,
+      usageType: AndroidUsageType.game,
+      audioFocus: AndroidAudioFocus.none,
+    ),
+    iOS: AudioContextIOS(
+      category: AVAudioSessionCategory.ambient,
+      options: const {},
+    ),
+  );
+
   Future<void> init() async {
     if (_players.isNotEmpty) return;
     for (int i = 0; i < count; i++) {
       try {
         final player = AudioPlayer()..audioCache = FlameAudio.audioCache;
+        // Disable FramePositionUpdater to eliminate per-frame platform channel queries
+        player.positionUpdater = null;
         await player.setPlayerMode(PlayerMode.lowLatency);
         await player.setReleaseMode(ReleaseMode.stop);
         await player.setVolume(volume);
@@ -66,7 +82,7 @@ class _SfxChannel {
 /// Audio service for managing and playing procedural SFX per spec §13.2.
 class AudioService {
   AudioService._() {
-    _jumpChannel = _SfxChannel(file: sfxJump, volume: 0.85, count: 2);
+    _jumpChannel = _SfxChannel(file: sfxJump, volume: 0.85, count: 3);
     _landChannel = _SfxChannel(file: sfxLand, volume: 0.40, count: 1);
     _hitChannel = _SfxChannel(file: sfxHit, volume: 0.90, count: 1);
     _nearMissChannel = _SfxChannel(file: sfxNearMiss, volume: 0.85, count: 2);
@@ -124,6 +140,17 @@ class AudioService {
   Future<void> init() async {
     if (_initialized || !_hasBinding) return;
     _initialized = true;
+
+    try {
+      await AudioPlayer.global
+          .setAudioContext(_SfxChannel._gameAudioContext)
+          .timeout(const Duration(milliseconds: 100));
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('AudioService.init global audio context warning: $e');
+      }
+    }
+
     try {
       await FlameAudio.audioCache
           .loadAll(allFiles)
@@ -136,7 +163,7 @@ class AudioService {
 
     try {
       await Future.wait(_channels.map((c) => c.init()))
-          .timeout(const Duration(milliseconds: 300));
+          .timeout(const Duration(milliseconds: 250));
       _ready = true;
     } catch (e) {
       if (kDebugMode) {
