@@ -60,77 +60,80 @@ class _GameScreenState extends State<GameScreen> {
       },
       child: Scaffold(
         backgroundColor: Palette.bgDeep,
-        body: Listener(
-          behavior: HitTestBehavior.translucent,
-          onPointerDown: (_) => _game.onTapDown(),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Bottom layer: GameWidget wrapped in RepaintBoundary
-              Positioned.fill(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Bottom layer: GameWidget wrapped in RepaintBoundary and Listener
+            Positioned.fill(
+              child: Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (_) => _game.onTapDown(),
                 child: RepaintBoundary(
                   child: GameWidget(game: _game),
                 ),
               ),
+            ),
 
-              // Above it: SafeArea Stack for UI and HUD
-              SafeArea(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // HUD at the top
+            // Above it: SafeArea Stack for UI and HUD
+            SafeArea(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // HUD at the top
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: GameHud(game: _game),
+                  ),
+
+                  // Debug overlay (at bottom-left in kDebugMode)
+                  if (kDebugMode)
                     Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: GameHud(game: _game),
-                    ),
-
-                    // Debug overlay (at bottom-left in kDebugMode)
-                    if (kDebugMode)
-                      Positioned(
-                        bottom: 8,
-                        left: 8,
-                        child: ValueListenableBuilder<GameState>(
-                          valueListenable: _game.state,
-                          builder: (context, state, _) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: ValueListenableBuilder<double>(
-                                valueListenable: _fpsNotifier,
-                                builder: (context, fps, _) {
-                                  return Text(
-                                    'FPS: ${fps.toStringAsFixed(0)} | State: ${state.name} | Seed: ${_game.seed} | Pattern: ${_game.lastPatternId ?? "none"}',
-                                    style: const TextStyle(
-                                      color: Palette.cyan,
-                                      fontSize: 12,
-                                      fontFamily: 'monospace',
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
+                      bottom: 8,
+                      left: 8,
+                      child: ValueListenableBuilder<GameState>(
+                        valueListenable: _game.state,
+                        builder: (context, state, _) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: ValueListenableBuilder<double>(
+                              valueListenable: _fpsNotifier,
+                              builder: (context, fps, _) {
+                                return Text(
+                                  'FPS: ${fps.toStringAsFixed(0)} | State: ${state.name} | Seed: ${_game.seed} | Pattern: ${_game.lastPatternId ?? "none"}',
+                                  style: const TextStyle(
+                                    color: Palette.cyan,
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                       ),
-
-                    // Ready hint when in ready state
-                    ValueListenableBuilder<GameState>(
-                      valueListenable: _game.state,
-                      builder: (context, state, _) {
-                        if (state == GameState.ready) {
-                          return const ReadyHint();
-                        }
-                        return const SizedBox.shrink();
-                      },
                     ),
+
+                  // Ready hint when in ready state (wrapped in IgnorePointer)
+                  ValueListenableBuilder<GameState>(
+                    valueListenable: _game.state,
+                    builder: (context, state, _) {
+                      if (state == GameState.ready) {
+                        return const IgnorePointer(
+                          child: ReadyHint(),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
 
                     // Pause Overlay (shown when state == GameState.paused)
                     ValueListenableBuilder<GameState>(
@@ -170,7 +173,6 @@ class _GameScreenState extends State<GameScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
