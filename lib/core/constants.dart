@@ -60,4 +60,9 @@ class C {
 
   // Persistence
   static const int maxScore = 9999999;
+
+  // Metadata & Links
+  static const String privacyPolicyUrl = '';
+  static const String publisherName = 'Rage Tap';
+  static const String appVersion = 'v1.0.0';
 }
