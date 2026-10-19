@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -156,7 +155,6 @@ void main() {
       expect(game.state.value, GameState.playing);
 
       // Pointer 2 down while Pointer 1 is still active -> ignored
-      int jumpBufferCountBefore = game.player.jumpBufferTimer > 0 ? 1 : 0;
       final event2 = PointerDownEvent(
         pointer: 2,
         position: tester.getCenter(screenFinder) + const Offset(40, 40),

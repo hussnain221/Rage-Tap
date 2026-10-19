@@ -13,6 +13,8 @@ import '../widgets/pause_overlay.dart';
 import '../widgets/ready_hint.dart';
 import '../widgets/results_overlay.dart';
 
+import '../../game/systems/difficulty.dart';
+
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
@@ -25,13 +27,43 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => GameScreenState();
 }
 
+class _DebugInfo {
+  final double fps;
+  final double speed;
+  final double runTime;
+  final int tier;
+  final String patternId;
+  final int seed;
+  final String state;
+
+  const _DebugInfo({
+    required this.fps,
+    required this.speed,
+    required this.runTime,
+    required this.tier,
+    required this.patternId,
+    required this.seed,
+    required this.state,
+  });
+}
+
 class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late final RageTapGame _game;
-  final ValueNotifier<double> _fpsNotifier = ValueNotifier<double>(0.0);
-  Timer? _fpsTimer;
+  ValueNotifier<_DebugInfo>? _debugNotifier;
+  Timer? _debugTimer;
   int? _activePointerId;
 
   RageTapGame get game => _game;
+
+  _DebugInfo get _currentDebugInfo => _DebugInfo(
+        fps: _game.currentFps,
+        speed: _game.currentSpeed,
+        runTime: _game.runTime,
+        tier: Difficulty.tier(_game.runTime),
+        patternId: _game.lastPatternId ?? 'none',
+        seed: _game.seed,
+        state: _game.state.value.name,
+      );
 
   @override
   void initState() {
@@ -40,9 +72,10 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _game = widget.game ?? RageTapGame();
 
     if (kDebugMode) {
-      _fpsTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-        if (mounted) {
-          _fpsNotifier.value = _game.currentFps;
+      _debugNotifier = ValueNotifier<_DebugInfo>(_currentDebugInfo);
+      _debugTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        if (mounted && _debugNotifier != null) {
+          _debugNotifier!.value = _currentDebugInfo;
         }
       });
     }
@@ -51,8 +84,8 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _fpsTimer?.cancel();
-    _fpsNotifier.dispose();
+    _debugTimer?.cancel();
+    _debugNotifier?.dispose();
     if (widget.game == null) {
       _game.disposeGame();
     }
@@ -146,40 +179,51 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     child: GameHud(game: _game),
                   ),
 
-                  // Debug overlay (at bottom-left in kDebugMode)
-                  if (kDebugMode)
+                  // Debug overlay & hitbox toggle corner (kDebugMode only)
+                  if (kDebugMode) ...[
                     Positioned(
-                      bottom: 8,
-                      left: 8,
-                      child: ValueListenableBuilder<GameState>(
-                        valueListenable: _game.state,
-                        builder: (context, state, _) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: ValueListenableBuilder<double>(
-                              valueListenable: _fpsNotifier,
-                              builder: (context, fps, _) {
-                                return Text(
-                                  'FPS: ${fps.toStringAsFixed(0)} | State: ${state.name} | Seed: ${_game.seed} | Pattern: ${_game.lastPatternId ?? "none"}',
-                                  style: const TextStyle(
-                                    color: Palette.cyan,
-                                    fontSize: 12,
-                                    fontFamily: 'monospace',
+                      top: 0,
+                      left: 0,
+                      child: _DebugCornerHitboxToggle(game: _game),
+                    ),
+                    if (_debugNotifier != null)
+                      Positioned(
+                        bottom: 8,
+                        left: 8,
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _game.showHitboxes,
+                          builder: (context, hitboxesOn, _) {
+                            return ValueListenableBuilder<_DebugInfo>(
+                              valueListenable: _debugNotifier!,
+                              builder: (context, info, _) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black87,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: Palette.cyan.withValues(alpha: 0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'FPS: ${info.fps.toStringAsFixed(0)} | Speed: ${info.speed.toStringAsFixed(0)} | Time: ${info.runTime.toStringAsFixed(1)}s | Tier: ${info.tier} | Pattern: ${info.patternId} | Seed: ${info.seed} | State: ${info.state} | Hitbox: ${hitboxesOn ? "ON" : "OFF"}',
+                                    style: const TextStyle(
+                                      color: Palette.cyan,
+                                      fontSize: 10,
+                                      fontFamily: 'monospace',
+                                    ),
                                   ),
                                 );
                               },
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
-                    ),
+                  ],
 
                   // Ready hint when in ready state (wrapped in IgnorePointer)
                   ValueListenableBuilder<GameState>(
@@ -233,5 +277,56 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           ),
         ),
       );
+  }
+}
+
+class _DebugCornerHitboxToggle extends StatefulWidget {
+  const _DebugCornerHitboxToggle({required this.game});
+  final RageTapGame game;
+
+  @override
+  State<_DebugCornerHitboxToggle> createState() => _DebugCornerHitboxToggleState();
+}
+
+class _DebugCornerHitboxToggleState extends State<_DebugCornerHitboxToggle> {
+  Timer? _timer;
+
+  void _onPointerDown(PointerDownEvent event) {
+    _timer?.cancel();
+    _timer = Timer(const Duration(seconds: 1), () {
+      if (mounted) {
+        widget.game.showHitboxes.value = !widget.game.showHitboxes.value;
+      }
+    });
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: _onPointerDown,
+      onPointerUp: _onPointerUp,
+      onPointerCancel: _onPointerCancel,
+      child: const SizedBox(
+        width: 64,
+        height: 64,
+      ),
+    );
   }
 }

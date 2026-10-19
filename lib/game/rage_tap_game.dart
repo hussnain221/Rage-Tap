@@ -47,6 +47,7 @@ class RageTapGame extends FlameGame {
   final ValueNotifier<bool> isNewBest = ValueNotifier<bool>(false);
   final ValueNotifier<int> resumeCountdown = ValueNotifier<int>(0);
   final ValueNotifier<int> scoreBonusTrigger = ValueNotifier<int>(0);
+  final ValueNotifier<bool> showHitboxes = ValueNotifier<bool>(false);
 
   final Player player = Player();
   final ParticleEffects particles = ParticleEffects();
@@ -364,5 +365,6 @@ class RageTapGame extends FlameGame {
     isNewBest.dispose();
     resumeCountdown.dispose();
     scoreBonusTrigger.dispose();
+    showHitboxes.dispose();
   }
 }

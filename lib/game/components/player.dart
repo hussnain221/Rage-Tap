@@ -164,8 +164,8 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
       scaleY: scaleY,
     );
 
-    // Hitbox outline in debug mode
-    if (kDebugMode) {
+    // Hitbox outline in debug mode when toggled on
+    if (kDebugMode && (isMounted && game.showHitboxes.value)) {
       canvas.drawRect(
         const Rect.fromLTWH(
           C.playerHitX,

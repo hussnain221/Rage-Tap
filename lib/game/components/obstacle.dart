@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants.dart';
 import '../painting/hazard_painters.dart';
+import '../rage_tap_game.dart';
 
 enum ObstacleType {
   spike,
@@ -11,7 +12,7 @@ enum ObstacleType {
   charging,
 }
 
-class Obstacle extends PositionComponent {
+class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
   Obstacle({
     required this.type,
     required double initialX,
@@ -152,8 +153,8 @@ class Obstacle extends PositionComponent {
         break;
     }
 
-    // Hitbox outline in debug mode
-    if (kDebugMode) {
+    // Hitbox outline in debug mode when toggled on
+    if (kDebugMode && (isMounted && game.showHitboxes.value)) {
       canvas.drawRect(relativeHitbox, _debugHitboxPaint);
     }
   }
