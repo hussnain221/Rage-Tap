@@ -51,6 +51,7 @@ class RageTapGame extends FlameGame {
 
   final Player player = Player();
   final ParticleEffects particles = ParticleEffects();
+  final List<Obstacle> _activeObstacles = [];
   FpsComponent? _fpsComponent;
 
   double runTime = 0.0;
@@ -92,12 +93,14 @@ class RageTapGame extends FlameGame {
   }
 
   void _clearObstacles() {
-    for (final obs in world.children.whereType<Obstacle>().toList()) {
-      obs.x = -1000;
-      obs.removeFromParent();
-    }
-    for (final popup in world.children.whereType<PopupText>().toList()) {
-      popup.removeFromParent();
+    _activeObstacles.clear();
+    for (final child in world.children.toList()) {
+      if (child is Obstacle) {
+        child.x = -1000;
+        child.removeFromParent();
+      } else if (child is PopupText) {
+        child.removeFromParent();
+      }
     }
   }
 
@@ -127,9 +130,17 @@ class RageTapGame extends FlameGame {
       // Update player physics
       player.step(clampedDt);
 
+      // Collect active obstacles into reusable buffer (zero per-frame allocations)
+      _activeObstacles.clear();
+      for (final child in world.children) {
+        if (child is Obstacle && !child.isRemoving) {
+          _activeObstacles.add(child);
+        }
+      }
+
       // Move obstacles with current scroll speed and remove off-screen
-      for (final obstacle in world.children.whereType<Obstacle>().toList()) {
-        if (obstacle.isRemoving) continue;
+      for (int i = 0; i < _activeObstacles.length; i++) {
+        final obstacle = _activeObstacles[i];
         obstacle.move(currentSpeed, clampedDt);
         if (obstacle.x + obstacle.width < -20) {
           obstacle.removeFromParent();
@@ -138,14 +149,17 @@ class RageTapGame extends FlameGame {
 
       // Spawn upcoming obstacles
       final newItems = spawner.update(clampedDt, currentSpeed, runTime);
-      for (final item in newItems) {
-        world.add(_createObstacle(item));
+      for (int i = 0; i < newItems.length; i++) {
+        final obs = _createObstacle(newItems[i]);
+        world.add(obs);
+        _activeObstacles.add(obs);
       }
 
       // Check AABB collision between player and obstacles
       final playerHitbox = player.hitbox;
       bool collided = false;
-      for (final obstacle in world.children.whereType<Obstacle>().toList()) {
+      for (int i = 0; i < _activeObstacles.length; i++) {
+        final obstacle = _activeObstacles[i];
         if (obstacle.isRemoving) continue;
         if (playerHitbox.overlaps(obstacle.hitbox)) {
           die(obstacle.type);
@@ -160,7 +174,8 @@ class RageTapGame extends FlameGame {
           nearMissCooldown -= clampedDt;
         }
 
-        for (final obstacle in world.children.whereType<Obstacle>().toList()) {
+        for (int i = 0; i < _activeObstacles.length; i++) {
+          final obstacle = _activeObstacles[i];
           if (obstacle.isRemoving) continue;
           obstacle.updateClearance(playerHitbox);
 

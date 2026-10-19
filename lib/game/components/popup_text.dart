@@ -36,6 +36,8 @@ class PopupText extends PositionComponent {
     textDirection: TextDirection.ltr,
   )..layout();
 
+  static final Paint _layerPaint = Paint();
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -68,9 +70,10 @@ class PopupText extends PositionComponent {
     canvas.scale(scale, scale);
 
     if (opacity < 1.0) {
+      _layerPaint.color = Color.fromRGBO(255, 255, 255, opacity);
       canvas.saveLayer(
         Rect.fromLTWH(0, 0, textW, textH),
-        Paint()..color = Color.fromRGBO(255, 255, 255, opacity),
+        _layerPaint,
       );
       _cachedPainter.paint(canvas, Offset.zero);
       canvas.restore();

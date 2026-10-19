@@ -1,9 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rage_tap/game/components/obstacle.dart';
-import 'package:rage_tap/game/components/player.dart';
-import 'package:rage_tap/game/game_state.dart';
 import 'package:rage_tap/game/rage_tap_game.dart';
 import 'package:rage_tap/game/systems/spawner.dart';
 import 'package:rage_tap/ui/screens/game_screen.dart';
