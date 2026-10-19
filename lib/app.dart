@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'core/theme.dart';
@@ -5,6 +6,7 @@ import 'ui/screens/game_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/settings_screen.dart';
 import 'ui/screens/splash_screen.dart';
+import 'ui/screens/widget_gallery_screen.dart';
 
 class RageTapApp extends StatelessWidget {
   const RageTapApp({super.key});
@@ -30,6 +32,13 @@ class RageTapApp extends StatelessWidget {
             break;
           case '/settings':
             page = const SettingsScreen();
+            break;
+          case '/widgets':
+            if (kDebugMode) {
+              page = const WidgetGalleryScreen();
+            } else {
+              page = const SplashScreen();
+            }
             break;
           default:
             page = const SplashScreen();
