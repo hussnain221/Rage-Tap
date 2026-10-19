@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/app.dart';
 import 'package:rage_tap/game/rage_tap_game.dart';
+import 'package:rage_tap/ui/widgets/neon_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -27,10 +28,11 @@ void main() {
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Settings'), findsNWidgets(2)); // AppBar title + body
+    expect(find.text('SETTINGS'), findsOneWidget);
+    expect(find.text('Sound Effects'), findsOneWidget);
 
     // Go back to Home screen
-    await tester.tap(find.byType(IconButton));
+    await tester.tap(find.byType(NeonIconButton));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('PLAY'), findsOneWidget);

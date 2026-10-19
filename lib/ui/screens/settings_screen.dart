@@ -110,7 +110,7 @@ Contact: support@ragetap.game
           NeonButton(
             text: 'CLOSE',
             variant: NeonButtonVariant.secondary,
-            height: 44,
+            height: 48,
             onPressed: () => Navigator.of(ctx).pop(),
           ),
         ],
@@ -147,7 +147,7 @@ Contact: support@ragetap.game
           NeonButton(
             text: 'OK',
             variant: NeonButtonVariant.primary,
-            height: 44,
+            height: 48,
             onPressed: () => Navigator.of(ctx).pop(),
           ),
         ],
@@ -187,7 +187,7 @@ Contact: support@ragetap.game
                 child: NeonButton(
                   text: 'CANCEL',
                   variant: NeonButtonVariant.secondary,
-                  height: 44,
+                  height: 48,
                   onPressed: () => Navigator.of(ctx).pop(false),
                 ),
               ),
@@ -196,7 +196,7 @@ Contact: support@ragetap.game
                 child: NeonButton(
                   text: 'RESET',
                   variant: NeonButtonVariant.danger,
-                  height: 44,
+                  height: 48,
                   onPressed: () => Navigator.of(ctx).pop(true),
                 ),
               ),
@@ -323,7 +323,7 @@ Contact: support@ragetap.game
                   NeonIconButton(
                     icon: const Icon(Icons.arrow_back, color: Palette.cyan, size: 22),
                     tooltip: 'Back',
-                    size: 44,
+                    size: 48,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 16),

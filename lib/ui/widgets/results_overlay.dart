@@ -106,13 +106,20 @@ class _ResultsOverlayState extends State<ResultsOverlay>
         color: Palette.scrim,
         alignment: Alignment.center,
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Spacer(flex: 2),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Spacer(flex: 2),
 
                 // "GAME OVER" (h1, magenta)
                 Text(
@@ -270,9 +277,14 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                   onPressed: widget.onHomePressed ?? () => Navigator.of(context).pop(),
                 ),
 
-                const Spacer(flex: 1),
-              ],
-            ),
+                          const Spacer(flex: 1),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
