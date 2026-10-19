@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/data/save_service.dart';
 import 'package:rage_tap/game/rage_tap_game.dart';
+import 'package:rage_tap/ui/screens/game_screen.dart';
 import 'package:rage_tap/ui/screens/home_screen.dart';
 import 'package:rage_tap/ui/screens/settings_screen.dart';
 import 'package:rage_tap/ui/widgets/results_overlay.dart';
@@ -85,6 +86,23 @@ void main() {
         expect(find.text('GAME OVER'), findsOneWidget);
         expect(find.text('RETRY'), findsOneWidget);
         expect(find.text('HOME'), findsOneWidget);
+      });
+
+      testWidgets('GameScreen renders without overflow at ${size.width.toInt()}x${size.height.toInt()}', (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        final game = RageTapGame();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: GameScreen(game: game),
+          ),
+        );
+
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(tester.takeException(), isNull, reason: 'Overflow exception on GameScreen at $size');
+        expect(find.text('BEST'), findsOneWidget);
       });
 
       testWidgets('ResultsOverlay with NEW BEST badge renders without overflow at ${size.width.toInt()}x${size.height.toInt()}', (tester) async {
