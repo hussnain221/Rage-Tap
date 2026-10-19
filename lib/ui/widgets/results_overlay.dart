@@ -30,6 +30,13 @@ class _ResultsOverlayState extends State<ResultsOverlay>
   late final AnimationController _confettiController;
   late final String _message;
   late final List<_ConfettiParticle> _confetti;
+  bool _retrying = false;
+
+  void _onRetry() {
+    if (_retrying) return;
+    _retrying = true;
+    widget.game.retry();
+  }
 
   @override
   void initState() {
@@ -266,7 +273,7 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                   text: 'RETRY',
                   width: 280,
                   height: 64,
-                  onPressed: () => widget.game.retry(),
+                  onPressed: _onRetry,
                 ),
 
                 const SizedBox(height: 12),

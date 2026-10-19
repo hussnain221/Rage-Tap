@@ -4,6 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../audio/audio_service.dart';
 import '../../core/palette.dart';
 import '../../game/game_state.dart';
 import '../../game/rage_tap_game.dart';
@@ -13,21 +14,30 @@ import '../widgets/ready_hint.dart';
 import '../widgets/results_overlay.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+  const GameScreen({
+    super.key,
+    this.game,
+  });
+
+  final RageTapGame? game;
 
   @override
-  State<GameScreen> createState() => _GameScreenState();
+  State<GameScreen> createState() => GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late final RageTapGame _game;
   final ValueNotifier<double> _fpsNotifier = ValueNotifier<double>(0.0);
   Timer? _fpsTimer;
+  int? _activePointerId;
+
+  RageTapGame get game => _game;
 
   @override
   void initState() {
     super.initState();
-    _game = RageTapGame();
+    WidgetsBinding.instance.addObserver(this);
+    _game = widget.game ?? RageTapGame();
 
     if (kDebugMode) {
       _fpsTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
@@ -40,10 +50,46 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _fpsTimer?.cancel();
     _fpsNotifier.dispose();
-    _game.disposeGame();
+    if (widget.game == null) {
+      _game.disposeGame();
+    }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      if (_game.state.value == GameState.playing) {
+        _game.pause();
+      }
+      AudioService.instance.stopAll();
+    }
+  }
+
+  void _onPointerDown(PointerDownEvent event) {
+    if (_activePointerId != null) {
+      // Ignore additional touches (multi-touch) beyond the primary finger
+      return;
+    }
+    _activePointerId = event.pointer;
+    _game.onTapDown();
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    if (event.pointer == _activePointerId) {
+      _activePointerId = null;
+    }
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    if (event.pointer == _activePointerId) {
+      _activePointerId = null;
+    }
   }
 
   @override
@@ -52,10 +98,21 @@ class _GameScreenState extends State<GameScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        if (_game.state.value == GameState.playing) {
-          _game.pause();
-        } else {
-          Navigator.of(context).maybePop();
+        switch (_game.state.value) {
+          case GameState.playing:
+            _game.pause();
+            break;
+          case GameState.resuming:
+            _game.pause();
+            break;
+          case GameState.paused:
+          case GameState.ready:
+          case GameState.results:
+            Navigator.of(context).maybePop();
+            break;
+          case GameState.dying:
+            // Ignore back during 0.42s death sequence so run results finalize cleanly
+            break;
         }
       },
       child: Scaffold(
@@ -67,7 +124,9 @@ class _GameScreenState extends State<GameScreen> {
             Positioned.fill(
               child: Listener(
                 behavior: HitTestBehavior.opaque,
-                onPointerDown: (_) => _game.onTapDown(),
+                onPointerDown: _onPointerDown,
+                onPointerUp: _onPointerUp,
+                onPointerCancel: _onPointerCancel,
                 child: RepaintBoundary(
                   child: GameWidget(game: _game),
                 ),

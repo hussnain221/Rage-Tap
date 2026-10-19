@@ -220,7 +220,9 @@ class RageTapGame extends FlameGame {
   }
 
   void pause() {
-    if (state.value == GameState.playing) {
+    if (state.value == GameState.playing || state.value == GameState.resuming) {
+      resumeCountdown.value = 0;
+      _resumeStepTimer = 0.0;
       state.value = GameState.paused;
     }
   }
@@ -309,6 +311,7 @@ class RageTapGame extends FlameGame {
   }
 
   void retry() {
+    if (state.value == GameState.playing) return;
     runTime = 0.0;
     distance = 0.0;
     currentSpeed = C.baseSpeed;
