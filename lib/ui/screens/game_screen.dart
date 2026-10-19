@@ -8,6 +8,7 @@ import '../../core/palette.dart';
 import '../../game/game_state.dart';
 import '../../game/rage_tap_game.dart';
 import '../widgets/hud.dart';
+import '../widgets/pause_overlay.dart';
 import '../widgets/ready_hint.dart';
 
 class GameScreen extends StatefulWidget {
@@ -125,6 +126,28 @@ class _GameScreenState extends State<GameScreen> {
                       builder: (context, state, _) {
                         if (state == GameState.ready) {
                           return const ReadyHint();
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+
+                    // Pause Overlay (shown when state == GameState.paused)
+                    ValueListenableBuilder<GameState>(
+                      valueListenable: _game.state,
+                      builder: (context, state, _) {
+                        if (state == GameState.paused) {
+                          return PauseOverlay(game: _game);
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+
+                    // Resume Countdown Overlay (shown when state == GameState.resuming)
+                    ValueListenableBuilder<GameState>(
+                      valueListenable: _game.state,
+                      builder: (context, state, _) {
+                        if (state == GameState.resuming) {
+                          return ResumeCountdownOverlay(game: _game);
                         }
                         return const SizedBox.shrink();
                       },
