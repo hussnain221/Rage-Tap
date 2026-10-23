@@ -173,5 +173,44 @@ void main() {
         reason: 'Expected timing window violation < 0.12s at speed 190 but got: $violations',
       );
     });
+
+    test('Rhythm packs (R3, R3S, R4, R5) are valid at speeds 285, 290, 300 and satisfy invariant 2', () {
+      const rhythmPatterns = [
+        PatternLibrary.r3,
+        PatternLibrary.r3s,
+        PatternLibrary.r4,
+        PatternLibrary.r5,
+      ];
+      const speeds = [285.0, 290.0, 300.0];
+
+      for (final pattern in rhythmPatterns) {
+        for (final speed in speeds) {
+          final violations = PatternValidator.validatePattern(
+            pattern,
+            minSpeed: speed,
+            maxSpeed: speed,
+          );
+          expect(
+            violations,
+            isEmpty,
+            reason: 'Rhythm pattern ${pattern.id} failed validation at speed $speed: ${violations.join("; ")}',
+          );
+
+          // Assert invariant 2 for each consecutive pair
+          for (int i = 0; i < pattern.items.length - 1; i++) {
+            final a = pattern.items[i];
+            final b = pattern.items[i + 1];
+            final widthA = PatternValidator.groupHitboxWidth(a.type, a.count, a.pitWidth);
+            final dxSec = b.dxSeconds - a.dxSeconds;
+            final gapTime = dxSec - (widthA / speed);
+            expect(
+              gapTime,
+              greaterThanOrEqualTo(PatternValidator.minGapTime - 0.0001),
+              reason: 'Pattern ${pattern.id} pair $i->${i+1} gap $gapTime < ${PatternValidator.minGapTime} at speed $speed',
+            );
+          }
+        }
+      }
+    });
   });
 }

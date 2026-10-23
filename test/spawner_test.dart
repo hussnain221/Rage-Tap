@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/core/constants.dart';
 import 'package:rage_tap/game/systems/hazard_geometry.dart';
 import 'package:rage_tap/game/systems/pattern.dart';
+import 'package:rage_tap/game/systems/pattern_library.dart';
 import 'package:rage_tap/game/systems/spawner.dart';
 
 void main() {
@@ -213,6 +214,37 @@ void main() {
         }
       }
       expect(pickedRegular, isTrue);
+    });
+
+    test('Spawner correctly handles long pattern R5: places all items in one go with exact dx*speed spacing', () {
+      final spawner = Spawner(seed: 42, library: [PatternLibrary.r5]);
+      const speed = 300.0;
+
+      // Start run with R5
+      final items = spawner.startRun(isRetry: false, speed: speed, runTime: 80.0);
+
+      expect(items.length, 5);
+      final firstX = items.first.x;
+      expect(firstX, greaterThanOrEqualTo(C.worldW + 40));
+
+      for (int i = 0; i < items.length; i++) {
+        final expectedX = firstX + PatternLibrary.r5.items[i].dxSeconds * speed;
+        expect(items[i].x, closeTo(expectedX, 0.001));
+      }
+
+      // Spacing between consecutive items must equal dx * speed (1.10s * 300 = 330 units)
+      for (int i = 0; i < items.length - 1; i++) {
+        final spacing = items[i + 1].x - items[i].x;
+        expect(spacing, closeTo(1.10 * speed, 0.001));
+      }
+
+      // Total span of items is 4.40s * 300 = 1320 units
+      expect(items.last.x - items.first.x, closeTo(4.40 * speed, 0.001));
+
+      // After spawning R5, next pattern cannot spawn immediately; must respect rest gap after last item trailing edge
+      const dt = 1 / 60;
+      final immediateItems = spawner.update(dt, speed, 80.0 + dt);
+      expect(immediateItems, isEmpty, reason: 'Next pattern must not spawn while R5 is still off-screen entering');
     });
   });
 }

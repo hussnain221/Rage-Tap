@@ -182,6 +182,59 @@ class PatternLibrary {
     ],
   );
 
+  // Rhythm Packs (tier 6, minSpeed 285)
+  static const Pattern r3 = Pattern(
+    id: 'R3',
+    minSpeed: 285,
+    tierStart: 45,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 1.10),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 2.20),
+    ],
+  );
+
+  static const Pattern r3s = Pattern(
+    id: 'R3S',
+    minSpeed: 285,
+    tierStart: 45,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 1.10),
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 2.75),
+    ],
+  );
+
+  static const Pattern r4 = Pattern(
+    id: 'R4',
+    minSpeed: 285,
+    tierStart: 45,
+    weight: 1,
+    items: [
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 1.10),
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 2.20),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 3.30),
+    ],
+  );
+
+  // Tier 8 (t >= 80s) - Rhythm Pack (minSpeed 285)
+  static const Pattern r5 = Pattern(
+    id: 'R5',
+    minSpeed: 285,
+    tierStart: 80,
+    weight: 1,
+    items: [
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 1.10),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 2.20),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 3.30),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 4.40),
+    ],
+  );
+
   static const List<Pattern> patterns = [
     s1,
     s2,
@@ -199,5 +252,9 @@ class PatternLibrary {
     b1w1,
     s2w1,
     w1w1,
+    r3,
+    r3s,
+    r4,
+    r5,
   ];
 }
