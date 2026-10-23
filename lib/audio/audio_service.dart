@@ -136,6 +136,7 @@ class AudioService {
   static const String sfxNearMiss = 'near_miss.wav';
   static const String sfxNewBest = 'new_best.wav';
   static const String sfxClick = 'click.wav';
+  static const String sfxSilence = 'silence.wav';
 
   static const List<String> allFiles = [
     sfxJump,
@@ -171,20 +172,23 @@ class AudioService {
     if (_initialized || !_hasBinding) return;
     _initialized = true;
 
-    if (!_SfxChannel._isTest) {
-      try {
-        await AudioPlayer.global.setAudioContext(_SfxChannel._gameAudioContext);
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('AudioService.init global audio context warning: $e');
-        }
+    if (_SfxChannel._isTest) {
+      _ready = true;
+      return;
+    }
+
+    try {
+      await AudioPlayer.global.setAudioContext(_SfxChannel._gameAudioContext);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('AudioService.init global audio context warning: $e');
       }
     }
 
     try {
       await FlameAudio.audioCache
-          .loadAll(allFiles)
-          .timeout(const Duration(milliseconds: 200));
+          .loadAll([...allFiles, sfxSilence])
+          .timeout(const Duration(milliseconds: 1000));
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('AudioService.init cache warning: $e\n$st');
@@ -193,18 +197,54 @@ class AudioService {
 
     try {
       await Future.wait(_channels.map((c) => c.init()))
-          .timeout(const Duration(milliseconds: 250));
-      _ready = true;
+          .timeout(const Duration(milliseconds: 1500));
     } catch (e) {
       if (kDebugMode) {
         debugPrint('AudioService.init channels warning: $e');
       }
-      _ready = true;
+    }
+
+    if (!_SfxChannel._isTest) {
+      try {
+        final keepAlive = AudioPlayer()..audioCache = FlameAudio.audioCache;
+        keepAlive.positionUpdater = null;
+        await keepAlive.setAudioContext(_SfxChannel._gameAudioContext);
+        await keepAlive.setPlayerMode(PlayerMode.lowLatency);
+        await keepAlive.setReleaseMode(ReleaseMode.loop);
+        await keepAlive.setVolume(0.001);
+        await keepAlive.setSource(AssetSource(sfxSilence));
+        _keepAlivePlayer = keepAlive;
+        if (SaveService.instance.soundEnabled) {
+          await keepAlive.resume();
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('AudioService keepAlive init warning: $e');
+        }
+      }
+    }
+
+    _ready = true;
+  }
+
+  AudioPlayer? _keepAlivePlayer;
+
+  void _syncKeepAlive() {
+    if (_keepAlivePlayer == null || _SfxChannel._isTest) return;
+    if (SaveService.instance.soundEnabled) {
+      if (_keepAlivePlayer!.state != PlayerState.playing) {
+        _keepAlivePlayer!.resume().catchError((_) {});
+      }
+    } else {
+      if (_keepAlivePlayer!.state == PlayerState.playing) {
+        _keepAlivePlayer!.stop().catchError((_) {});
+      }
     }
   }
 
   void _playChannel(_SfxChannel channel) {
     if (!SaveService.instance.soundEnabled || !_hasBinding || !_ready) return;
+    _syncKeepAlive();
     channel.play();
   }
 
@@ -241,6 +281,7 @@ class AudioService {
   /// Stop all active audio (e.g. when backgrounding or pausing).
   void stopAll() {
     if (!_hasBinding) return;
+    _keepAlivePlayer?.stop().catchError((_) {});
     for (final channel in _channels) {
       channel.stop();
     }
@@ -249,6 +290,10 @@ class AudioService {
   /// Release resources when disposing service.
   Future<void> dispose() async {
     _ready = false;
+    try {
+      await _keepAlivePlayer?.dispose();
+    } catch (_) {}
+    _keepAlivePlayer = null;
     for (final channel in _channels) {
       await channel.dispose();
     }
