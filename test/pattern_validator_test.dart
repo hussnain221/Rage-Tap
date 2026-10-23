@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rage_tap/game/components/obstacle.dart';
 import 'package:rage_tap/game/systems/hazard_geometry.dart';
 import 'package:rage_tap/game/systems/pattern.dart';
 import 'package:rage_tap/game/systems/pattern_library.dart';
@@ -123,6 +122,55 @@ void main() {
         violations.any((v) => v.contains('< 0.89s') || v.contains('gap between')),
         isTrue,
         reason: 'Expected dead-zone gap violation but got: $violations',
+      );
+    });
+
+    test('Tall wall patterns (W1, W1S1, B1W1, S2W1, W1W1) are valid at speeds 210, 240, 270, 300', () {
+      const tallWallPatterns = [
+        PatternLibrary.w1,
+        PatternLibrary.w1s1,
+        PatternLibrary.b1w1,
+        PatternLibrary.s2w1,
+        PatternLibrary.w1w1,
+      ];
+      const speeds = [210.0, 240.0, 270.0, 300.0];
+
+      for (final pattern in tallWallPatterns) {
+        for (final speed in speeds) {
+          final violations = PatternValidator.validatePattern(
+            pattern,
+            minSpeed: speed,
+            maxSpeed: speed,
+          );
+          expect(
+            violations,
+            isEmpty,
+            reason: 'Tall wall pattern ${pattern.id} failed validation at speed $speed: ${violations.join("; ")}',
+          );
+        }
+      }
+    });
+
+    test('Hypothetical tallWall pattern with minSpeed 190 is REJECTED', () {
+      const invalidTallWallPattern = Pattern(
+        id: 'INVALID_W1',
+        minSpeed: 190,
+        tierStart: 45,
+        weight: 1,
+        items: [
+          PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0),
+        ],
+      );
+      final violations = PatternValidator.validatePattern(
+        invalidTallWallPattern,
+        minSpeed: 190,
+        maxSpeed: 190,
+      );
+      expect(violations, isNotEmpty);
+      expect(
+        violations.any((v) => v.contains('timing window') && v.contains('< 0.12')),
+        isTrue,
+        reason: 'Expected timing window violation < 0.12s at speed 190 but got: $violations',
       );
     });
   });

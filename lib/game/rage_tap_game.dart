@@ -209,6 +209,12 @@ class RageTapGame extends FlameGame {
     ));
   }
 
+  static double get _startTime {
+    if (!kDebugMode) return 0.0;
+    const fromEnv = String.fromEnvironment('START_TIME');
+    return double.tryParse(fromEnv) ?? 0.0;
+  }
+
   void startRun() {
     if (state.value == GameState.ready) {
       _runResultRecorded = false;
@@ -221,7 +227,9 @@ class RageTapGame extends FlameGame {
       }
       _bestAtStart = bestScore.value;
       _clearObstacles();
-      final initialItems = spawner.startRun(isRetry: false, speed: currentSpeed);
+      runTime = _startTime;
+      currentSpeed = Difficulty.speed(runTime);
+      final initialItems = spawner.startRun(isRetry: false, speed: currentSpeed, runTime: runTime);
       for (final item in initialItems) {
         world.add(_createObstacle(item));
       }
@@ -326,9 +334,9 @@ class RageTapGame extends FlameGame {
 
   void retry() {
     if (state.value == GameState.playing) return;
-    runTime = 0.0;
+    runTime = _startTime;
     distance = 0.0;
-    currentSpeed = C.baseSpeed;
+    currentSpeed = Difficulty.speed(runTime);
     bonusScore = 0;
     nearMissCount = 0;
     nearMissCooldown = 0.0;
@@ -354,7 +362,7 @@ class RageTapGame extends FlameGame {
     player.resetAnimation();
     particles.clear();
     _clearObstacles();
-    final initialItems = spawner.startRun(isRetry: true, speed: currentSpeed);
+    final initialItems = spawner.startRun(isRetry: true, speed: currentSpeed, runTime: runTime);
     for (final item in initialItems) {
       world.add(_createObstacle(item));
     }

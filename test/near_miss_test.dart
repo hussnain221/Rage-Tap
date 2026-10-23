@@ -183,5 +183,40 @@ void main() {
       expect(game.bonusScore, 0);
       expect(game.world.children.whereType<PopupText>().isEmpty, isTrue);
     });
+
+    test('Tall wall awards near-miss when clearing within 14 units', () async {
+      final game = RageTapGame();
+      await game.onLoad();
+      game.startRun();
+
+      for (final obs in game.world.children.whereType<Obstacle>().toList()) {
+        obs.removeFromParent();
+      }
+
+      final wall = Obstacle.tallWall(x: 200);
+      await game.world.add(wall);
+
+      // Tall wall hitbox top: groundTopY(500) - tallHitH(65) = 435.
+      // Player hitbox bottom: player.y + C.playerHitY(6) + C.playerHitH(34) = player.y + 40.
+      // Clearance = wallTop - playerBottom = 435 - (y + 40) = 10 -> y = 385.
+      game.player.y = 385;
+      game.player.vy = 0;
+      game.player.grounded = false;
+
+      // Frame 1: player overlaps horizontally with wall
+      wall.x = 63;
+      game.update(1 / 60);
+
+      expect(wall.minClearance, closeTo(10.0, 1.5));
+      expect(game.nearMissCount, 0);
+
+      // Frame 2: wall passes behind player
+      wall.x = 30;
+      game.update(1 / 60);
+
+      expect(wall.passed, isTrue);
+      expect(game.nearMissCount, 1);
+      expect(game.bonusScore, C.nearMissBonus);
+    });
   });
 }

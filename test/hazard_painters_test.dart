@@ -64,6 +64,22 @@ void main() {
       expect(picture, isNotNull);
     });
 
+    test('renders Tall Wall with horizontal stripes, antenna, and glow without error', () {
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      for (double t = 0.0; t <= 1.0; t += 0.25) {
+        HazardPainters.paintTallWall(
+          canvas,
+          origin: const Offset(20, 20),
+          t: t,
+        );
+      }
+
+      final picture = recorder.endRecording();
+      expect(picture, isNotNull);
+    });
+
     test('Obstacle hitboxes and dimensions remain unchanged', () {
       final spike1 = Obstacle.spike(x: 100, count: 1);
       expect(spike1.size.x, C.spikeW);
@@ -81,6 +97,12 @@ void main() {
       expect(barrier.relativeHitbox.width, C.barrierHitW);
       expect(barrier.relativeHitbox.height, C.barrierHitH);
 
+      final tallWall = Obstacle.tallWall(x: 100);
+      expect(tallWall.size.x, C.tallW);
+      expect(tallWall.size.y, C.tallH);
+      expect(tallWall.relativeHitbox.width, C.tallHitW);
+      expect(tallWall.relativeHitbox.height, C.tallHitH);
+
       final charge = Obstacle.charging(x: 100);
       expect(charge.size.x, C.chargeW);
       expect(charge.size.y, C.chargeH);
@@ -95,10 +117,12 @@ void main() {
       final spike = Obstacle.spike(x: 100, count: 2);
       final barrier = Obstacle.barrier(x: 100);
       final charge = Obstacle.charging(x: 100);
+      final tallWall = Obstacle.tallWall(x: 100);
 
       spike.render(canvas);
       barrier.render(canvas);
       charge.render(canvas);
+      tallWall.render(canvas);
 
       final picture = recorder.endRecording();
       expect(picture, isNotNull);

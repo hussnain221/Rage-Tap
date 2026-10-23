@@ -68,14 +68,14 @@ class Spawner {
   static double restMin(double t) => Difficulty.restGapRange(t).min;
   static double restMax(double t) => Difficulty.restGapRange(t).max;
 
-  List<SpawnItem> startRun({required bool isRetry, required double speed}) {
+  List<SpawnItem> startRun({required bool isRetry, required double speed, double runTime = 0.0}) {
     reset();
     final leadSec = isRetry ? C.safeOpeningRetry : C.safeOpeningFirstRun;
     final firstX = math.max(C.worldW + 40, C.playerLeft + leadSec * speed);
 
-    final pattern = pickPattern(runTime: 0.0, speed: speed);
+    final pattern = pickPattern(runTime: runTime, speed: speed);
     final items = _generatePatternItems(pattern, firstX, speed);
-    _prepareNextPattern(runTime: 0.0, speed: speed);
+    _prepareNextPattern(runTime: runTime, speed: speed);
     return items;
   }
 

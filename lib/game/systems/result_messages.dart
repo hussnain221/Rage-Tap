@@ -45,6 +45,11 @@ class ResultMessages {
     "It charged. You didn't dodge.",
   ];
 
+  static const List<String> tallWallPool = [
+    'That wall was taller than your hopes.',
+    'Jump higher. Or earlier. Or both.',
+  ];
+
   /// Pure function that chooses a result message according to selection order:
   /// 1. New best
   /// 2. Near-best (score >= 80% of best, score > 0, not new best)
@@ -92,6 +97,8 @@ class ResultMessages {
           pool = chargingPool;
           break;
         case DeathCause.tallWall:
+          pool = tallWallPool;
+          break;
         case DeathCause.beam:
         case DeathCause.pit:
           pool = null;

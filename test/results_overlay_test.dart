@@ -101,6 +101,25 @@ void main() {
       }
       expect(sawChargeMsg, isTrue);
     });
+
+    test('Tall wall death cause selects tall wall message when chosen', () {
+      final fixedRand = math.Random(42);
+      bool sawTallWallMsg = false;
+      for (int i = 0; i < 20; i++) {
+        final msg = ResultMessages.select(
+          isNewBest: false,
+          score: 20,
+          bestScore: 100,
+          deathCause: DeathCause.tallWall,
+          random: fixedRand,
+        );
+        if (ResultMessages.tallWallPool.contains(msg)) {
+          sawTallWallMsg = true;
+          break;
+        }
+      }
+      expect(sawTallWallMsg, isTrue);
+    });
   });
 
   group('ResultsOverlay widget tests', () {

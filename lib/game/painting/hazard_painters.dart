@@ -78,6 +78,41 @@ class HazardPainters {
     const Radius.circular(1.5),
   );
 
+  // --- Tall wall cached assets ---
+  static final RRect _tallWallRRect = RRect.fromRectAndRadius(
+    const Rect.fromLTWH(0, 0, C.tallW, C.tallH),
+    const Radius.circular(6),
+  );
+
+  static final Paint _tallWallGlowPaint = Paint()
+    ..color = Palette.magenta.withValues(alpha: 0.45)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+  static final Paint _tallWallBodyPaint = Paint()
+    ..shader = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Palette.magenta, Palette.magentaDark],
+    ).createShader(const Rect.fromLTWH(0, 0, C.tallW, C.tallH));
+
+  static final Paint _tallWallStripePaint = Paint()
+    ..color = Palette.yellow.withValues(alpha: 0.35)
+    ..strokeWidth = 3.0
+    ..style = PaintingStyle.stroke;
+
+  static final Paint _tallAntennaPaint = Paint()
+    ..color = Palette.yellow
+    ..strokeWidth = 2.0
+    ..strokeCap = StrokeCap.round;
+
+  static final Paint _tallAntennaTipPaint = Paint()
+    ..color = Palette.yellow
+    ..style = PaintingStyle.fill;
+
+  static final Paint _tallAntennaTipGlowPaint = Paint()
+    ..color = Palette.yellow
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
   // --- Charging block cached assets ---
   static final RRect _chargeRRect = RRect.fromRectAndRadius(
     const Rect.fromLTWH(0, 0, C.chargeW, C.chargeH),
@@ -205,6 +240,44 @@ class HazardPainters {
 
     // 4. Light top highlight
     canvas.drawRRect(_barrierHighlightRRect, _barrierHighlightPaint);
+
+    canvas.restore();
+  }
+
+  /// Paints tall wall: 30x68 rounded rect (radius 6), vertical gradient from
+  /// magenta to magentaDark, horizontal yellow@35% stripes on lower half,
+  /// 2-unit antenna (8 units high) at top center with pulsing yellow tip (radius 3),
+  /// soft magenta glow (blur 8).
+  static void paintTallWall(
+    Canvas canvas, {
+    Offset origin = Offset.zero,
+    double t = 0.0,
+  }) {
+    canvas.save();
+    canvas.translate(origin.dx, origin.dy);
+
+    // 1. Soft magenta glow around body (blur 8)
+    canvas.drawRRect(_tallWallRRect, _tallWallGlowPaint);
+
+    // 2. Body with vertical gradient
+    canvas.drawRRect(_tallWallRRect, _tallWallBodyPaint);
+
+    // 3. Horizontal yellow@35% hazard stripes on lower half (y: 34 to 68)
+    canvas.save();
+    canvas.clipRRect(_tallWallRRect);
+    for (double y = 40.0; y < C.tallH; y += 8.0) {
+      canvas.drawLine(Offset(0, y), Offset(C.tallW, y), _tallWallStripePaint);
+    }
+    canvas.restore();
+
+    // 4. Thin 2-unit antenna (8 units high) at top center (x = 15)
+    canvas.drawLine(const Offset(15, 0), const Offset(15, -8), _tallAntennaPaint);
+
+    // 5. Glowing yellow tip at (15, -8) pulsing at ~1.5 Hz
+    final pulse = 0.6 + 0.4 * math.sin(t * 1.5 * 2 * math.pi);
+    _tallAntennaTipGlowPaint.color = Palette.yellow.withValues(alpha: 0.5 * pulse);
+    canvas.drawCircle(const Offset(15, -8), 3.0, _tallAntennaTipGlowPaint);
+    canvas.drawCircle(const Offset(15, -8), 3.0, _tallAntennaTipPaint);
 
     canvas.restore();
   }

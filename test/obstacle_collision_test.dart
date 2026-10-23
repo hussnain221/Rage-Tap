@@ -105,4 +105,22 @@ void main() {
 
     game.disposeGame();
   });
+
+  test('Player colliding with tall wall sets DeathCause.tallWall', () {
+    final game = RageTapGame();
+    game.startRun();
+
+    final wall = Obstacle.tallWall(x: C.playerLeft);
+    game.world.add(wall);
+
+    game.player.y = Player.groundY;
+    game.player.grounded = true;
+
+    game.update(1 / 60);
+
+    expect(game.state.value, GameState.dying);
+    expect(game.lastDeathCause, DeathCause.tallWall);
+
+    game.disposeGame();
+  });
 }

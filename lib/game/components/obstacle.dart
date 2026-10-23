@@ -60,6 +60,14 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
     );
   }
 
+  factory Obstacle.tallWall({required double x}) {
+    return Obstacle(
+      type: HazardType.tallWall,
+      initialX: x,
+      count: 1,
+    );
+  }
+
   final HazardType type;
   final int count;
   final double pitWidth;
@@ -114,6 +122,8 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
         HazardPainters.paintChargingBlock(canvas);
         break;
       case HazardType.tallWall:
+        HazardPainters.paintTallWall(canvas, t: isMounted ? game.runTime : 0.0);
+        break;
       case HazardType.beam:
       case HazardType.pit:
         break;

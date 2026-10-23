@@ -126,6 +126,62 @@ class PatternLibrary {
     ],
   );
 
+  // Tier 6 (t >= 45s) - Tall Wall (minSpeed 210)
+  static const Pattern w1 = Pattern(
+    id: 'W1',
+    minSpeed: 210,
+    tierStart: 45,
+    weight: 3,
+    introFor: HazardType.tallWall,
+    items: [
+      PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0),
+    ],
+  );
+
+  static const Pattern w1s1 = Pattern(
+    id: 'W1S1',
+    minSpeed: 210,
+    tierStart: 45,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 1.15),
+    ],
+  );
+
+  static const Pattern b1w1 = Pattern(
+    id: 'B1W1',
+    minSpeed: 210,
+    tierStart: 45,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 1.15),
+    ],
+  );
+
+  static const Pattern s2w1 = Pattern(
+    id: 'S2W1',
+    minSpeed: 210,
+    tierStart: 45,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.spike, count: 2, dxSeconds: 0),
+      PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 1.20),
+    ],
+  );
+
+  static const Pattern w1w1 = Pattern(
+    id: 'W1W1',
+    minSpeed: 210,
+    tierStart: 45,
+    weight: 1,
+    items: [
+      PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 1.20),
+    ],
+  );
+
   static const List<Pattern> patterns = [
     s1,
     s2,
@@ -138,5 +194,10 @@ class PatternLibrary {
     c1,
     s1b1s1,
     b1s2b1,
+    w1,
+    w1s1,
+    b1w1,
+    s2w1,
+    w1w1,
   ];
 }
