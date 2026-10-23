@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rage_tap/core/constants.dart';
 import 'package:rage_tap/game/systems/hazard_geometry.dart';
 import 'package:rage_tap/game/systems/pattern.dart';
 import 'package:rage_tap/game/systems/pattern_library.dart';
@@ -264,6 +265,85 @@ void main() {
         violations.any((v) => v.contains('beam') && v.contains('arrival diff')),
         isTrue,
         reason: 'Expected arrival diff violation for unfair spike->beam pattern but got: $violations',
+      );
+    });
+
+    test('Pit patterns (PIT1, PIT2, PIT3, PS1, SP1, PM1, MB1, PP, G1) are valid at speeds 190, 200, 230, 255, 300', () {
+      final pitPatterns = [
+        PatternLibrary.pit1,
+        PatternLibrary.pit2,
+        PatternLibrary.pit3,
+        PatternLibrary.ps1,
+        PatternLibrary.sp1,
+        PatternLibrary.pm1,
+        PatternLibrary.mb1,
+        PatternLibrary.pp,
+        PatternLibrary.g1,
+      ];
+      const speeds = [190.0, 200.0, 230.0, 255.0, 300.0];
+
+      for (final pattern in pitPatterns) {
+        for (final speed in speeds) {
+          if (speed < pattern.minSpeed) continue;
+          final violations = PatternValidator.validatePattern(
+            pattern,
+            minSpeed: speed,
+            maxSpeed: speed,
+          );
+          expect(
+            violations,
+            isEmpty,
+            reason: 'Pit pattern ${pattern.id} failed validation at speed $speed: ${violations.join("; ")}',
+          );
+        }
+      }
+    });
+
+    test('PIT2 (medium pit) with minSpeed 190 is REJECTED (timing window 0.1179 < 0.12)', () {
+      const unfairPit2 = Pattern(
+        id: 'UNFAIR_PIT2_190',
+        minSpeed: 190,
+        tierStart: 80,
+        weight: 1,
+        items: [
+          PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitMediumW),
+        ],
+      );
+
+      final violations = PatternValidator.validatePattern(
+        unfairPit2,
+        minSpeed: 190,
+        maxSpeed: 190,
+      );
+      expect(violations, isNotEmpty);
+      expect(
+        violations.any((v) => v.contains('timing window') && v.contains('0.1179')),
+        isTrue,
+        reason: 'Expected 0.1179 timing window violation at speed 190 but got: $violations',
+      );
+    });
+
+    test('PIT3 (long pit) with minSpeed 190 is REJECTED', () {
+      const unfairPit3 = Pattern(
+        id: 'UNFAIR_PIT3_190',
+        minSpeed: 190,
+        tierStart: 80,
+        weight: 1,
+        items: [
+          PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitLongW),
+        ],
+      );
+
+      final violations = PatternValidator.validatePattern(
+        unfairPit3,
+        minSpeed: 190,
+        maxSpeed: 190,
+      );
+      expect(violations, isNotEmpty);
+      expect(
+        violations.any((v) => v.contains('timing window')),
+        isTrue,
+        reason: 'Expected timing window violation for long pit at speed 190 but got: $violations',
       );
     });
   });

@@ -23,6 +23,7 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
             _computeY(geometryFor(type, count: count, pitWidth: pitWidth)),
           ),
           size: geometryFor(type, count: count, pitWidth: pitWidth).visualSize,
+          priority: 2,
         );
 
   static double _computeY(HazardGeometry geo) {
@@ -73,6 +74,14 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
       type: HazardType.beam,
       initialX: x,
       count: 1,
+    );
+  }
+
+  factory Obstacle.pit({required double x, required double width}) {
+    return Obstacle(
+      type: HazardType.pit,
+      initialX: x,
+      pitWidth: width,
     );
   }
 
@@ -136,12 +145,26 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
         HazardPainters.paintOverheadBeam(canvas, t: isMounted ? game.runTime : 0.0);
         break;
       case HazardType.pit:
+        HazardPainters.paintPit(canvas, width: pitWidth > 0 ? pitWidth : size.x);
         break;
     }
 
     // Hitbox outline in debug mode when toggled on
     if (kDebugMode && (isMounted && game.showHitboxes.value)) {
-      canvas.drawRect(relativeHitbox, _debugHitboxPaint);
+      if (type == HazardType.pit) {
+        // Draw the danger hole interval (inset by pitCenterInset)
+        canvas.drawRect(
+          Rect.fromLTWH(
+            C.pitCenterInset,
+            0,
+            width - (C.pitCenterInset * 2),
+            size.y,
+          ),
+          _debugHitboxPaint,
+        );
+      } else {
+        canvas.drawRect(relativeHitbox, _debugHitboxPaint);
+      }
     }
   }
 }

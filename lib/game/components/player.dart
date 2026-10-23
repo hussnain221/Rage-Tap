@@ -15,11 +15,13 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
       : super(
           position: Vector2(C.playerLeft, C.groundTopY - C.playerSize),
           size: Vector2(C.playerSize, C.playerSize),
+          priority: 5,
         );
 
   double vy = 0.0;
   bool grounded = true;
   double jumpBufferTimer = 0.0;
+  bool isFalling = false;
 
   static const double squashDuration = 0.08;
   double _squashTimer = 0.0;
@@ -31,6 +33,11 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
 
   final Paint _debugHitboxPaint = Paint()
     ..color = Colors.red
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.0;
+
+  final Paint _debugCenterLinePaint = Paint()
+    ..color = Colors.yellow
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1.0;
 
@@ -99,6 +106,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
     _scaredTimer = 0.0;
     animTime = 0.0;
     isDead = false;
+    isFalling = false;
   }
 
   void jump() {
@@ -127,6 +135,13 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
       if (jumpBufferTimer < 0) {
         jumpBufferTimer = 0;
       }
+    }
+
+    if (isFalling) {
+      grounded = false;
+      vy += C.gravity * dt;
+      y += vy * dt;
+      return;
     }
 
     if (!grounded) {
@@ -174,6 +189,13 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
           C.playerHitH,
         ),
         _debugHitboxPaint,
+      );
+      // Player center line
+      final centerX = C.playerHitX + (C.playerHitW / 2);
+      canvas.drawLine(
+        Offset(centerX, C.playerHitY),
+        Offset(centerX, C.playerHitY + C.playerHitH),
+        _debugCenterLinePaint,
       );
     }
   }

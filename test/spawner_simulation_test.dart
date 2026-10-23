@@ -14,6 +14,8 @@ class _SimHazard {
   final double hitboxWidth;
   double? arrivalTime;
   double? arrivalSpeed;
+  double? pitEnterTime;
+  double? pitExitTime;
 
   _SimHazard({
     required this.type,
@@ -26,8 +28,37 @@ class _SimHazard {
 }
 
 void _assertPairFairness(int seed, int index, _SimHazard a, _SimHazard b) {
-  // Pit rules are handled in H4
-  if (a.type == HazardType.pit || b.type == HazardType.pit) {
+  if (a.type == HazardType.pit && b.type == HazardType.pit) {
+    final gap = b.pitEnterTime! - a.pitExitTime!;
+    expect(
+      gap,
+      greaterThanOrEqualTo(PatternValidator.minGapTime - 0.03),
+      reason:
+          'Seed $seed pair #$index (pit -> pit) gap ${gap.toStringAsFixed(4)}s < ${PatternValidator.minGapTime}s',
+    );
+    return;
+  }
+
+  if (a.type == HazardType.pit && b.type != HazardType.pit && b.type != HazardType.beam) {
+    final gap = b.arrivalTime! - a.pitExitTime!;
+    expect(
+      gap,
+      greaterThanOrEqualTo(PatternValidator.minGapTime - 0.03),
+      reason:
+          'Seed $seed pair #$index (pit -> ${b.type.name}) gap ${gap.toStringAsFixed(4)}s < ${PatternValidator.minGapTime}s',
+    );
+    return;
+  }
+
+  if (a.type != HazardType.pit && a.type != HazardType.beam && b.type == HazardType.pit) {
+    final aPassDuration = a.hitboxWidth / a.arrivalSpeed!;
+    final gap = b.pitEnterTime! - (a.arrivalTime! + aPassDuration);
+    expect(
+      gap,
+      greaterThanOrEqualTo(PatternValidator.minGapTime - 0.03),
+      reason:
+          'Seed $seed pair #$index (${a.type.name} -> pit) gap ${gap.toStringAsFixed(4)}s < ${PatternValidator.minGapTime}s',
+    );
     return;
   }
 
@@ -129,21 +160,24 @@ void main() {
               : speed;
           h.x -= hSpeed * dt;
 
-          if (h.arrivalTime == null) {
-            final double arrivalThreshold;
-            final double eventX;
-            if (h.type == HazardType.pit) {
-              arrivalThreshold = playerCenter;
-              eventX = h.x + C.pitCenterInset; // pitEnter measured at player center
-            } else {
-              arrivalThreshold = playerHitboxRight;
-              eventX = h.x + h.hitboxInsetLeft; // hitbox left edge reaching player hitbox right edge
-            }
-
-            if (eventX <= arrivalThreshold) {
+          if (h.type == HazardType.pit) {
+            if (h.pitEnterTime == null && (h.x + C.pitCenterInset <= playerCenter)) {
+              h.pitEnterTime = simTime;
               h.arrivalTime = simTime;
               h.arrivalSpeed = hSpeed;
               arrivedHazards.add(h);
+            }
+            if (h.pitExitTime == null && (h.x + h.pitWidth - C.pitCenterInset <= playerCenter)) {
+              h.pitExitTime = simTime;
+            }
+          } else {
+            if (h.arrivalTime == null) {
+              final eventX = h.x + h.hitboxInsetLeft;
+              if (eventX <= playerHitboxRight) {
+                h.arrivalTime = simTime;
+                h.arrivalSpeed = hSpeed;
+                arrivedHazards.add(h);
+              }
             }
           }
         }
@@ -182,6 +216,7 @@ void main() {
     const double dt = 1 / 60;
     const double totalSimulationSec = 120.0;
     const double playerHitboxRight = C.playerLeft + C.playerHitX + C.playerHitW; // 98.0
+    const double playerCenter = C.playerLeft + C.playerHitX + C.playerHitW / 2; // 84.0
 
     _SimHazard makeSimHazard(SpawnItem item) {
       final geo = geometryFor(item.type, count: item.count, pitWidth: item.pitWidth);
@@ -219,12 +254,102 @@ void main() {
               : currentSpeed;
           h.x -= hSpeed * dt;
 
-          if (h.arrivalTime == null) {
-            final eventX = h.x + h.hitboxInsetLeft;
-            if (eventX <= playerHitboxRight) {
+          if (h.type == HazardType.pit) {
+            if (h.pitEnterTime == null && (h.x + C.pitCenterInset <= playerCenter)) {
+              h.pitEnterTime = simTime;
               h.arrivalTime = simTime;
               h.arrivalSpeed = hSpeed;
               arrivedHazards.add(h);
+            }
+            if (h.pitExitTime == null && (h.x + h.pitWidth - C.pitCenterInset <= playerCenter)) {
+              h.pitExitTime = simTime;
+            }
+          } else {
+            if (h.arrivalTime == null) {
+              final eventX = h.x + h.hitboxInsetLeft;
+              if (eventX <= playerHitboxRight) {
+                h.arrivalTime = simTime;
+                h.arrivalSpeed = hSpeed;
+                arrivedHazards.add(h);
+              }
+            }
+          }
+        }
+
+        activeHazards.removeWhere((h) => h.x + h.hitboxWidth < -20);
+
+        final newItems = spawner.update(dt, currentSpeed, simTime);
+        for (final item in newItems) {
+          activeHazards.add(makeSimHazard(item));
+        }
+      }
+
+      for (int i = 0; i < arrivedHazards.length - 1; i++) {
+        _assertPairFairness(seed, i, arrivedHazards[i], arrivedHazards[i + 1]);
+      }
+    }
+  });
+
+  test('Spawner simulation starting at t=80s (START_TIME=80) across seeds 1..200 satisfies pit rules', () {
+    const double dt = 1 / 60;
+    const double totalSimulationSec = 120.0;
+    const double playerHitboxRight = C.playerLeft + C.playerHitX + C.playerHitW; // 98.0
+    const double playerCenter = C.playerLeft + C.playerHitX + C.playerHitW / 2; // 84.0
+
+    _SimHazard makeSimHazard(SpawnItem item) {
+      final geo = geometryFor(item.type, count: item.count, pitWidth: item.pitWidth);
+      return _SimHazard(
+        type: item.type,
+        count: item.count,
+        pitWidth: item.pitWidth,
+        x: item.x,
+        hitboxInsetLeft: geo.relativeHitbox.left,
+        hitboxWidth: PatternValidator.groupHitboxWidth(item.type, item.count, item.pitWidth),
+      );
+    }
+
+    for (int seed = 1; seed <= 200; seed++) {
+      final spawner = Spawner(seed: seed, enableLogging: false);
+      const startT = 80.0;
+      final speed = Difficulty.speed(startT);
+
+      final initialItems = spawner.startRun(isRetry: false, speed: speed, runTime: startT);
+      final activeHazards = <_SimHazard>[];
+      for (final item in initialItems) {
+        activeHazards.add(makeSimHazard(item));
+      }
+
+      final arrivedHazards = <_SimHazard>[];
+      final steps = (totalSimulationSec / dt).round();
+
+      for (int step = 0; step < steps; step++) {
+        final simTime = startT + step * dt;
+        final currentSpeed = Difficulty.speed(simTime);
+
+        for (final h in activeHazards) {
+          final hSpeed = h.type == HazardType.charging
+              ? currentSpeed + C.chargingExtraSpeed
+              : currentSpeed;
+          h.x -= hSpeed * dt;
+
+          if (h.type == HazardType.pit) {
+            if (h.pitEnterTime == null && (h.x + C.pitCenterInset <= playerCenter)) {
+              h.pitEnterTime = simTime;
+              h.arrivalTime = simTime;
+              h.arrivalSpeed = hSpeed;
+              arrivedHazards.add(h);
+            }
+            if (h.pitExitTime == null && (h.x + h.pitWidth - C.pitCenterInset <= playerCenter)) {
+              h.pitExitTime = simTime;
+            }
+          } else {
+            if (h.arrivalTime == null) {
+              final eventX = h.x + h.hitboxInsetLeft;
+              if (eventX <= playerHitboxRight) {
+                h.arrivalTime = simTime;
+                h.arrivalSpeed = hSpeed;
+                arrivedHazards.add(h);
+              }
             }
           }
         }

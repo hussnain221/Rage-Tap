@@ -115,4 +115,53 @@ void main() {
 
     game.disposeGame();
   });
+
+  test('Teaching hint "JUMP THE GAP!" triggers once on first pit and persists pitHintShown', () async {
+    SharedPreferences.setMockInitialValues({'pit_hint_shown': false});
+    await SaveService.instance.init();
+
+    final game = RageTapGame(seed: 42);
+    game.startRun();
+
+    expect(game.hint.value, isNull);
+    expect(SaveService.instance.pitHintShown, isFalse);
+
+    // Add a pit far off screen (x = 400)
+    final pit = Obstacle.pit(x: 400, width: 80);
+    game.world.add(pit);
+
+    // Update 1 frame - pit is at x > 360, no hint yet
+    game.update(1 / 60);
+    expect(game.hint.value, isNull);
+
+    // Move pit to x = 350 (< 360)
+    pit.x = 350;
+    game.update(1 / 60);
+
+    // Hint should now be active
+    expect(game.hint.value, 'JUMP THE GAP!');
+    expect(SaveService.instance.pitHintShown, isTrue);
+
+    // Advance 1.5s - still active
+    double elapsed = 0.0;
+    while (elapsed < 1.5) {
+      game.update(1 / 60);
+      elapsed += 1 / 60;
+    }
+    expect(game.hint.value, 'JUMP THE GAP!');
+
+    // Advance 0.2s more (total 1.7s > 1.6s) - hint cleared
+    for (int i = 0; i < 15; i++) {
+      game.update(1 / 60);
+    }
+    expect(game.hint.value, isNull);
+
+    // Add second pit: hint does not trigger again
+    final pit2 = Obstacle.pit(x: 350, width: 80);
+    game.world.add(pit2);
+    game.update(1 / 60);
+    expect(game.hint.value, isNull);
+
+    game.disposeGame();
+  });
 }

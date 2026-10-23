@@ -96,6 +96,22 @@ void main() {
       expect(picture, isNotNull);
     });
 
+    test('renders Pit with void, glow, depth lines, and warning stripes without error', () {
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      for (final w in [C.pitShortW, C.pitMediumW, C.pitLongW]) {
+        HazardPainters.paintPit(
+          canvas,
+          width: w,
+          origin: Offset(w, 0),
+        );
+      }
+
+      final picture = recorder.endRecording();
+      expect(picture, isNotNull);
+    });
+
     test('Obstacle hitboxes and dimensions remain unchanged', () {
       final spike1 = Obstacle.spike(x: 100, count: 1);
       expect(spike1.size.x, C.spikeW);
@@ -131,6 +147,12 @@ void main() {
       expect(beam.relativeHitbox.width, C.beamHitW);
       expect(beam.relativeHitbox.height, C.beamBottomY - C.beamHitTopY);
       expect(beam.y, C.beamDroneTopY);
+
+      final pit = Obstacle.pit(x: 100, width: C.pitShortW);
+      expect(pit.size.x, C.pitShortW);
+      expect(pit.size.y, C.worldH - C.groundTopY);
+      expect(pit.relativeHitbox, Rect.zero);
+      expect(pit.y, C.groundTopY);
     });
 
     test('Obstacle.render invokes painter without error', () {
@@ -142,12 +164,14 @@ void main() {
       final charge = Obstacle.charging(x: 100);
       final tallWall = Obstacle.tallWall(x: 100);
       final beam = Obstacle.beam(x: 100);
+      final pit = Obstacle.pit(x: 100, width: C.pitShortW);
 
       spike.render(canvas);
       barrier.render(canvas);
       charge.render(canvas);
       tallWall.render(canvas);
       beam.render(canvas);
+      pit.render(canvas);
 
       final picture = recorder.endRecording();
       expect(picture, isNotNull);

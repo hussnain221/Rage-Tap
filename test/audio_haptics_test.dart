@@ -31,7 +31,7 @@ void main() {
   });
 
   group('AudioService Unit Tests', () {
-    test('AudioService registers all 6 spec audio files', () {
+    test('AudioService registers all 7 spec audio files including fall', () {
       expect(AudioService.allFiles, containsAll([
         'jump.wav',
         'land.wav',
@@ -39,8 +39,9 @@ void main() {
         'near_miss.wav',
         'new_best.wav',
         'click.wav',
+        'fall.wav',
       ]));
-      expect(AudioService.allFiles.length, equals(6));
+      expect(AudioService.allFiles.length, equals(7));
     });
 
     test('AudioService methods execute safely without error when sound is disabled', () {
@@ -52,6 +53,7 @@ void main() {
       expect(() => AudioService.instance.playNearMiss(), returnsNormally);
       expect(() => AudioService.instance.playNewBest(), returnsNormally);
       expect(() => AudioService.instance.playClick(), returnsNormally);
+      expect(() => AudioService.instance.playFall(), returnsNormally);
       expect(() => AudioService.instance.stopAll(), returnsNormally);
     });
 
@@ -64,6 +66,7 @@ void main() {
       expect(() => AudioService.instance.playNearMiss(), returnsNormally);
       expect(() => AudioService.instance.playNewBest(), returnsNormally);
       expect(() => AudioService.instance.playClick(), returnsNormally);
+      expect(() => AudioService.instance.playFall(), returnsNormally);
       expect(() => AudioService.instance.stopAll(), returnsNormally);
     });
   });
@@ -75,6 +78,7 @@ void main() {
       expect(() => HapticsService.hit(), returnsNormally);
       expect(() => HapticsService.nearMiss(), returnsNormally);
       expect(() => HapticsService.buttonPress(), returnsNormally);
+      expect(() => HapticsService.fall(), returnsNormally);
     });
 
     test('HapticsService methods execute safely when haptics are enabled', () {
@@ -83,6 +87,7 @@ void main() {
       expect(() => HapticsService.hit(), returnsNormally);
       expect(() => HapticsService.nearMiss(), returnsNormally);
       expect(() => HapticsService.buttonPress(), returnsNormally);
+      expect(() => HapticsService.fall(), returnsNormally);
     });
   });
 

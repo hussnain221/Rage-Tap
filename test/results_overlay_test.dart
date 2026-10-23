@@ -139,6 +139,25 @@ void main() {
       }
       expect(sawBeamMsg, isTrue);
     });
+
+    test('Pit death cause selects pit message when chosen', () {
+      final fixedRand = math.Random(42);
+      bool sawPitMsg = false;
+      for (int i = 0; i < 20; i++) {
+        final msg = ResultMessages.select(
+          isNewBest: false,
+          score: 20,
+          bestScore: 100,
+          deathCause: DeathCause.pit,
+          random: fixedRand,
+        );
+        if (ResultMessages.pitPool.contains(msg)) {
+          sawPitMsg = true;
+          break;
+        }
+      }
+      expect(sawPitMsg, isTrue);
+    });
   });
 
   group('ResultsOverlay widget tests', () {

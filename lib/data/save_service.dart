@@ -13,6 +13,7 @@ class SaveService {
   static const String keyFirstRunDone = 'first_run_done';
   static const String keyTotalRuns = 'total_runs';
   static const String keyBeamHintShown = 'beam_hint_shown';
+  static const String keyPitHintShown = 'pit_hint_shown';
 
   SharedPreferences? _prefs;
 
@@ -124,6 +125,22 @@ class SaveService {
   Future<void> setBeamHintShown(bool value) async {
     if (_prefs != null) {
       await _prefs!.setBool(keyBeamHintShown, value);
+    }
+  }
+
+  bool get pitHintShown {
+    final val = _prefs?.get(keyPitHintShown);
+    if (val is bool) return val;
+    return false;
+  }
+
+  set pitHintShown(bool value) {
+    _prefs?.setBool(keyPitHintShown, value);
+  }
+
+  Future<void> setPitHintShown(bool value) async {
+    if (_prefs != null) {
+      await _prefs!.setBool(keyPitHintShown, value);
     }
   }
 

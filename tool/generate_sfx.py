@@ -184,6 +184,25 @@ def gen_click():
     return normalize(samples, target_peak=0.65)
 
 
+def gen_fall():
+    """Sine sweep 700->90 Hz over 0.45 s with decay and fades (peak ~0.8)."""
+    duration = 0.45
+    num_samples = int(duration * SAMPLE_RATE)
+    f_start = 700.0
+    f_end = 90.0
+    k = (f_end - f_start) / duration  # df/dt (negative)
+
+    samples = []
+    for i in range(num_samples):
+        t = i / SAMPLE_RATE
+        phase = 2.0 * math.pi * (f_start * t + 0.5 * k * t * t)
+        decay = math.exp(-2.5 * (t / duration))
+        samples.append(math.sin(phase) * decay)
+
+    samples = apply_fades(samples, fade_in_ms=2.0, fade_out_ms=10.0)
+    return normalize(samples, target_peak=PEAK_TARGET)
+
+
 def main():
     root_dir = Path(__file__).resolve().parent.parent
     output_dir = root_dir / "assets" / "audio"
@@ -196,6 +215,7 @@ def main():
         "near_miss.wav": gen_near_miss,
         "new_best.wav": gen_new_best,
         "click.wav": gen_click,
+        "fall.wav": gen_fall,
     }
 
     print(f"Generating SFX in {output_dir}...")

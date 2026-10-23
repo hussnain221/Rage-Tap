@@ -1,3 +1,4 @@
+import '../../core/constants.dart';
 import '../components/obstacle.dart';
 import 'pattern.dart';
 
@@ -315,6 +316,105 @@ class PatternLibrary {
     ],
   );
 
+  // Tier 8 (t >= 80s) - Pit (gap in the ground)
+  static const Pattern pit1 = Pattern(
+    id: 'PIT1',
+    minSpeed: 190,
+    tierStart: 80,
+    weight: 3,
+    introFor: HazardType.pit,
+    items: [
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitShortW),
+    ],
+  );
+
+  static const Pattern pit2 = Pattern(
+    id: 'PIT2',
+    minSpeed: 200,
+    tierStart: 80,
+    weight: 3,
+    items: [
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitMediumW),
+    ],
+  );
+
+  static const Pattern pit3 = Pattern(
+    id: 'PIT3',
+    minSpeed: 255,
+    tierStart: 80,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitLongW),
+    ],
+  );
+
+  static const Pattern ps1 = Pattern(
+    id: 'PS1',
+    minSpeed: 190,
+    tierStart: 80,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 1.30, pitWidth: C.pitShortW),
+    ],
+  );
+
+  static const Pattern sp1 = Pattern(
+    id: 'SP1',
+    minSpeed: 190,
+    tierStart: 80,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitShortW),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 1.40),
+    ],
+  );
+
+  static const Pattern pm1 = Pattern(
+    id: 'PM1',
+    minSpeed: 200,
+    tierStart: 80,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 1.35, pitWidth: C.pitMediumW),
+    ],
+  );
+
+  static const Pattern mb1 = Pattern(
+    id: 'MB1',
+    minSpeed: 200,
+    tierStart: 80,
+    weight: 1,
+    items: [
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitMediumW),
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 1.55),
+    ],
+  );
+
+  static const Pattern pp = Pattern(
+    id: 'PP',
+    minSpeed: 190,
+    tierStart: 80,
+    weight: 1,
+    items: [
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitShortW),
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 1.35, pitWidth: C.pitShortW),
+    ],
+  );
+
+  static const Pattern g1 = Pattern(
+    id: 'G1',
+    minSpeed: 210,
+    tierStart: 80,
+    weight: 1,
+    items: [
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.pit, count: 1, dxSeconds: 1.30, pitWidth: C.pitShortW),
+      PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 2.80),
+    ],
+  );
+
   static const List<Pattern> patterns = [
     s1,
     s2,
@@ -343,5 +443,14 @@ class PatternLibrary {
     d5,
     d6,
     d7,
+    pit1,
+    pit2,
+    pit3,
+    ps1,
+    sp1,
+    pm1,
+    mb1,
+    pp,
+    g1,
   ];
 }

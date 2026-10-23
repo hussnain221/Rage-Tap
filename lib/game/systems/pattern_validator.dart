@@ -243,6 +243,39 @@ class PatternValidator {
               'Pattern ${pattern.id} pair #$i (beam) -> #${i + 1} (${b.type.name}) reaction window ${reactionTime.toStringAsFixed(4)}s < beamReactionSec ${C.beamReactionSec}s at speed ${speed.toStringAsFixed(1)}',
             );
           }
+        } else if (a.type != HazardType.pit && b.type == HazardType.pit) {
+          // Ground hazard A -> pit B:
+          // pitEnter - (A.arrive + A.width / A.s) >= 0.89s
+          final dxSec = b.dxSeconds - a.dxSeconds;
+          final aInset = hitboxInsetLeft(a.type);
+          final aWidth = groupHitboxWidth(a.type, a.count, a.pitWidth);
+          final gap = dxSec - (aInset + aWidth - 20.0) / speed;
+          if (gap < minGapTime - 0.0001) {
+            violations.add(
+              'Pattern ${pattern.id} pair #$i (${a.type.name}) -> #${i + 1} (pit) gap ${gap.toStringAsFixed(4)}s < ${minGapTime}s at speed ${speed.toStringAsFixed(1)}',
+            );
+          }
+        } else if (a.type == HazardType.pit && b.type != HazardType.pit) {
+          // Pit A -> ground hazard B:
+          // B.arrive - pitExit >= 0.89s
+          final dxSec = b.dxSeconds - a.dxSeconds;
+          final bInset = hitboxInsetLeft(b.type);
+          final gap = dxSec - (a.pitWidth - bInset + 8.0) / speed;
+          if (gap < minGapTime - 0.0001) {
+            violations.add(
+              'Pattern ${pattern.id} pair #$i (pit) -> #${i + 1} (${b.type.name}) gap ${gap.toStringAsFixed(4)}s < ${minGapTime}s at speed ${speed.toStringAsFixed(1)}',
+            );
+          }
+        } else if (a.type == HazardType.pit && b.type == HazardType.pit) {
+          // Pit A -> Pit B:
+          // pitEnter2 - pitExit1 >= 0.89s
+          final dxSec = b.dxSeconds - a.dxSeconds;
+          final gap = dxSec - (a.pitWidth - 12.0) / speed;
+          if (gap < minGapTime - 0.0001) {
+            violations.add(
+              'Pattern ${pattern.id} pair #$i (pit) -> #${i + 1} (pit) gap ${gap.toStringAsFixed(4)}s < ${minGapTime}s at speed ${speed.toStringAsFixed(1)}',
+            );
+          }
         } else {
           // Both are ground solids (invariant 2)
           final gap = intraPatternGapTime(a: a, b: b, speed: speed);

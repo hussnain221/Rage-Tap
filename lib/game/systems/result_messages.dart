@@ -55,6 +55,11 @@ class ResultMessages {
     'Rule one of beams: stay low.',
   ];
 
+  static const List<String> pitPool = [
+    'Watch your step. Literally.',
+    'The floor is optional. Apparently.',
+  ];
+
   /// Pure function that chooses a result message according to selection order:
   /// 1. New best
   /// 2. Near-best (score >= 80% of best, score > 0, not new best)
@@ -90,7 +95,7 @@ class ResultMessages {
 
     // 3. Cause-specific (50% chance)
     if (deathCause != null && rand.nextBool()) {
-      List<String>? pool;
+      final List<String> pool;
       switch (deathCause) {
         case DeathCause.spike:
           pool = spikePool;
@@ -108,15 +113,13 @@ class ResultMessages {
           pool = beamPool;
           break;
         case DeathCause.pit:
-          pool = null;
+          pool = pitPool;
           break;
       }
 
-      if (pool != null) {
-        final candidates = pool.where((m) => m != lastMessage).toList();
-        if (candidates.isNotEmpty) {
-          return candidates[rand.nextInt(candidates.length)];
-        }
+      final candidates = pool.where((m) => m != lastMessage).toList();
+      if (candidates.isNotEmpty) {
+        return candidates[rand.nextInt(candidates.length)];
       }
     }
 

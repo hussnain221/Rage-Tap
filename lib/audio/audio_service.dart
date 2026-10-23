@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
@@ -120,6 +120,7 @@ class AudioService {
     _nearMissChannel = _SfxChannel(file: sfxNearMiss, volume: 0.85, count: 2);
     _newBestChannel = _SfxChannel(file: sfxNewBest, volume: 0.95, count: 1);
     _clickChannel = _SfxChannel(file: sfxClick, volume: 0.60, count: 2);
+    _fallChannel = _SfxChannel(file: sfxFall, volume: 0.80, count: 1);
 
     _channels = [
       _jumpChannel,
@@ -128,6 +129,7 @@ class AudioService {
       _nearMissChannel,
       _newBestChannel,
       _clickChannel,
+      _fallChannel,
     ];
   }
   static final AudioService instance = AudioService._();
@@ -138,6 +140,7 @@ class AudioService {
   static const String sfxNearMiss = 'near_miss.wav';
   static const String sfxNewBest = 'new_best.wav';
   static const String sfxClick = 'click.wav';
+  static const String sfxFall = 'fall.wav';
   static const String sfxSilence = 'silence.wav';
 
   static const List<String> allFiles = [
@@ -147,6 +150,7 @@ class AudioService {
     sfxNearMiss,
     sfxNewBest,
     sfxClick,
+    sfxFall,
   ];
 
   late final _SfxChannel _jumpChannel;
@@ -155,6 +159,7 @@ class AudioService {
   late final _SfxChannel _nearMissChannel;
   late final _SfxChannel _newBestChannel;
   late final _SfxChannel _clickChannel;
+  late final _SfxChannel _fallChannel;
   late final List<_SfxChannel> _channels;
 
   bool _initialized = false;
@@ -317,6 +322,13 @@ class AudioService {
   /// Play UI click blip on button press.
   void playClick() => _playChannel(_clickChannel);
 
+  /// Play fall sound when player falls into a pit.
+  void playFall() {
+    try {
+      _playChannel(_fallChannel);
+    } catch (_) {}
+  }
+
   /// Stop all active audio (e.g. when backgrounding or pausing).
   void stopAll() {
     if (!_hasBinding) return;
@@ -366,6 +378,14 @@ class HapticsService {
 
   /// Hit -> mediumImpact
   static void hit() {
+    if (!SaveService.instance.hapticsEnabled || !_hasBinding) return;
+    try {
+      HapticFeedback.mediumImpact();
+    } catch (_) {}
+  }
+
+  /// Fall into pit -> mediumImpact
+  static void fall() {
     if (!SaveService.instance.hapticsEnabled || !_hasBinding) return;
     try {
       HapticFeedback.mediumImpact();

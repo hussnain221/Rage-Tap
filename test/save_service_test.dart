@@ -92,6 +92,7 @@ void main() {
         'haptics_enabled': false,
         'first_run_done': true,
         'beam_hint_shown': true,
+        'pit_hint_shown': true,
       });
       final saveService = SaveService.instance;
       await saveService.init();
@@ -99,6 +100,7 @@ void main() {
       expect(saveService.bestScore, 500);
       expect(saveService.totalRuns, 42);
       expect(saveService.beamHintShown, isTrue);
+      expect(saveService.pitHintShown, isTrue);
 
       await saveService.resetProgress();
 
@@ -109,9 +111,10 @@ void main() {
       expect(saveService.hapticsEnabled, isFalse);
       expect(saveService.firstRunDone, isTrue);
       expect(saveService.beamHintShown, isTrue);
+      expect(saveService.pitHintShown, isTrue);
     });
 
-    test('beamHintShown defaults to false and persists when set', () async {
+    test('beamHintShown and pitHintShown default to false and persist when set', () async {
       SharedPreferences.setMockInitialValues({});
       final saveService = SaveService.instance;
       await saveService.init();
@@ -119,6 +122,10 @@ void main() {
       expect(saveService.beamHintShown, isFalse);
       await saveService.setBeamHintShown(true);
       expect(saveService.beamHintShown, isTrue);
+
+      expect(saveService.pitHintShown, isFalse);
+      await saveService.setPitHintShown(true);
+      expect(saveService.pitHintShown, isTrue);
     });
   });
 }

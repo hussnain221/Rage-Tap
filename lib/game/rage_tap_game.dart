@@ -149,12 +149,37 @@ class RageTapGame extends FlameGame {
         }
       }
 
-      // Teaching hint (one-time for beam)
-      if (!_saveService.beamHintShown) {
+      // Fall rule (evaluated every frame while state == playing, AFTER physics step including landing and buffered jump)
+      if (player.grounded) {
+        final playerCenterX = player.x + C.playerHitX + (C.playerHitW / 2);
         for (int i = 0; i < _activeObstacles.length; i++) {
           final obs = _activeObstacles[i];
-          if (obs.type == HazardType.beam && obs.x < C.worldW) {
+          if (obs.type == HazardType.pit && !obs.isRemoving) {
+            final holeLeft = obs.x;
+            final holeRight = obs.x + obs.width;
+            if (playerCenterX > (holeLeft + C.pitCenterInset) &&
+                playerCenterX < (holeRight - C.pitCenterInset)) {
+              die(DeathCause.pit);
+              break;
+            }
+          }
+        }
+      }
+
+      if (state.value != GameState.playing) {
+        super.update(clampedDt);
+        return;
+      }
+
+      // Teaching hint (one-time for beam and pit)
+      if (!_saveService.beamHintShown || !_saveService.pitHintShown) {
+        for (int i = 0; i < _activeObstacles.length; i++) {
+          final obs = _activeObstacles[i];
+          if (!_saveService.beamHintShown && obs.type == HazardType.beam && obs.x < C.worldW) {
             _triggerBeamHint();
+            break;
+          } else if (!_saveService.pitHintShown && obs.type == HazardType.pit && obs.x < C.worldW) {
+            _triggerPitHint();
             break;
           }
         }
@@ -177,12 +202,12 @@ class RageTapGame extends FlameGame {
         _activeObstacles.add(obs);
       }
 
-      // Check AABB collision between player and obstacles
+      // Check AABB collision between player and obstacles (pits have no AABB collision)
       final playerHitbox = player.hitbox;
       bool collided = false;
       for (int i = 0; i < _activeObstacles.length; i++) {
         final obstacle = _activeObstacles[i];
-        if (obstacle.isRemoving) continue;
+        if (obstacle.isRemoving || obstacle.type == HazardType.pit) continue;
         if (playerHitbox.overlaps(obstacle.hitbox)) {
           die(DeathCause.values.byName(obstacle.type.name));
           collided = true;
@@ -190,7 +215,7 @@ class RageTapGame extends FlameGame {
         }
       }
 
-      // If no collision happened, track clearance and evaluate near-misses (skip beam)
+      // If no collision happened, track clearance and evaluate near-misses (skip beam and pit)
       if (!collided) {
         if (nearMissCooldown > 0) {
           nearMissCooldown -= clampedDt;
@@ -198,7 +223,11 @@ class RageTapGame extends FlameGame {
 
         for (int i = 0; i < _activeObstacles.length; i++) {
           final obstacle = _activeObstacles[i];
-          if (obstacle.isRemoving || obstacle.type == HazardType.beam) continue;
+          if (obstacle.isRemoving ||
+              obstacle.type == HazardType.beam ||
+              obstacle.type == HazardType.pit) {
+            continue;
+          }
           obstacle.updateClearance(playerHitbox);
 
           if (!obstacle.passed && obstacle.hitbox.right < playerHitbox.left) {
@@ -236,6 +265,12 @@ class RageTapGame extends FlameGame {
   void _triggerBeamHint() {
     _saveService.setBeamHintShown(true);
     hint.value = 'STAY LOW!';
+    _hintTimer = 1.6;
+  }
+
+  void _triggerPitHint() {
+    _saveService.setPitHintShown(true);
+    hint.value = 'JUMP THE GAP!';
     _hintTimer = 1.6;
   }
 
@@ -306,16 +341,25 @@ class RageTapGame extends FlameGame {
 
   void die([DeathCause? cause]) {
     if (_hasDied || state.value != GameState.playing) return;
-    AudioService.instance.playHit();
-    HapticsService.hit();
     _hasDied = true;
     lastDeathCause = cause;
     _dyingTimer = 0.0;
     state.value = GameState.dying;
     player.isDead = true;
-    particles.triggerDeathEffect(
-      Vector2(player.x + C.playerSize / 2, player.y + C.playerSize / 2),
-    );
+
+    if (cause == DeathCause.pit) {
+      player.isFalling = true;
+      AudioService.instance.playFall();
+      HapticsService.fall();
+      // Skip white flash, particles, screen shake, and hit freeze
+    } else {
+      AudioService.instance.playHit();
+      HapticsService.hit();
+      particles.triggerDeathEffect(
+        Vector2(player.x + C.playerSize / 2, player.y + C.playerSize / 2),
+      );
+    }
+
     if (kDebugMode) {
       debugPrint('Player died. Cause: $cause');
     }
@@ -323,7 +367,12 @@ class RageTapGame extends FlameGame {
 
   void _updateDying(double dt) {
     _dyingTimer += dt;
-    if (_dyingTimer >= C.hitFreezeSec + C.deathAnimSec) {
+    if (lastDeathCause == DeathCause.pit) {
+      player.step(dt);
+    }
+    final dyingDuration =
+        lastDeathCause == DeathCause.pit ? 0.55 : (C.hitFreezeSec + C.deathAnimSec);
+    if (_dyingTimer >= dyingDuration) {
       _finalizeRun();
       state.value = GameState.results;
       if (kDebugMode) {
@@ -388,6 +437,7 @@ class RageTapGame extends FlameGame {
     player.y = Player.groundY;
     player.vy = 0.0;
     player.grounded = true;
+    player.isFalling = false;
     player.jumpBufferTimer = 0.0;
     player.resetAnimation();
     particles.clear();

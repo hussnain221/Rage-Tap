@@ -452,4 +452,90 @@ class HazardPainters {
 
     canvas.restore();
   }
+
+  // --- Pit cached assets ---
+  static final Paint _pitVoidPaint = Paint()
+    ..shader = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0xFF04020A), Colors.black],
+    ).createShader(const Rect.fromLTWH(0, 0, 100, 140));
+
+  static final Paint _pitGlowPaint = Paint()
+    ..shader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Colors.transparent, Palette.magenta.withValues(alpha: 0.25)],
+    ).createShader(const Rect.fromLTWH(0, 70, 100, 70));
+
+  static final Paint _pitDepthLinePaint = Paint()
+    ..color = Palette.cyan.withValues(alpha: 0.08)
+    ..strokeWidth = 1.0;
+
+  static final Paint _pitEdgeLinePaint = Paint()
+    ..color = Palette.cyan
+    ..strokeWidth = 3.0;
+
+  static final Paint _pitEdgeGlowPaint = Paint()
+    ..color = Palette.cyan.withValues(alpha: 0.45)
+    ..strokeWidth = 5.0
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+  static final Paint _pitWarningDarkPaint = Paint()
+    ..color = Palette.bgDeep
+    ..style = PaintingStyle.fill;
+
+  static final Paint _pitWarningStripePaint = Paint()
+    ..color = Palette.orange
+    ..strokeWidth = 3.0;
+
+  /// Paints pit: void rectangle from y=groundTopY to bottom across hole width,
+  /// vertical gradient from bgDeep darkened to black, faint vertical depth lines (cyan@8%),
+  /// soft magenta glow rising from bottom (alpha 0.25 gradient), two 3-unit cyan edge lines
+  /// with soft glow, and 14-unit-wide orange/dark diagonal lip warning stripes on each side.
+  static void paintPit(
+    Canvas canvas, {
+    required double width,
+    Offset origin = Offset.zero,
+  }) {
+    canvas.save();
+    canvas.translate(origin.dx, origin.dy);
+
+    const double pitH = C.worldH - C.groundTopY; // 140.0
+
+    // 1. Void rectangle from y=0 to bottom across width (breaks the ground's top line)
+    canvas.drawRect(Rect.fromLTWH(0, 0, width, pitH), _pitVoidPaint);
+
+    // 2. Faint vertical depth lines (cyan @ 8%)
+    for (double dx = 16.0; dx < width; dx += 16.0) {
+      canvas.drawLine(Offset(dx, 12), Offset(dx, pitH - 8), _pitDepthLinePaint);
+    }
+
+    // 3. Soft magenta glow rising from the bottom (alpha 0.25 gradient)
+    canvas.drawRect(Rect.fromLTWH(0, 70, width, 70), _pitGlowPaint);
+
+    // 4. Edges: two 3-unit Palette.cyan vertical lines with soft glow at both hole edges
+    canvas.drawLine(Offset.zero, const Offset(0, pitH), _pitEdgeGlowPaint);
+    canvas.drawLine(Offset.zero, const Offset(0, pitH), _pitEdgeLinePaint);
+    canvas.drawLine(Offset(width, 0), Offset(width, pitH), _pitEdgeGlowPaint);
+    canvas.drawLine(Offset(width, 0), Offset(width, pitH), _pitEdgeLinePaint);
+
+    // 5. Lip warning: 14-unit-wide orange/dark diagonal warning stripes on ground top
+    _paintLipWarning(canvas, -14.0, 0.0);
+    _paintLipWarning(canvas, width, width + 14.0);
+
+    canvas.restore();
+  }
+
+  static void _paintLipWarning(Canvas canvas, double left, double right) {
+    const double h = 8.0;
+    final w = right - left;
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(left, 0, w, h));
+    canvas.drawRect(Rect.fromLTWH(left, 0, w, h), _pitWarningDarkPaint);
+    for (double sx = left - h; sx < right + h; sx += 6.0) {
+      canvas.drawLine(Offset(sx, h), Offset(sx + h, 0), _pitWarningStripePaint);
+    }
+    canvas.restore();
+  }
 }
