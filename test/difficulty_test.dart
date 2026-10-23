@@ -42,20 +42,39 @@ void main() {
       expect(gap.max, closeTo(1.3699, 0.0001));
     });
 
-    test('t = 45s: speed 300, tier 5, rest gap reaches floor [0.95, 1.25]', () {
+    test('t = 45s: speed 300, tier 6, rest gap reaches floor [0.95, 1.25]', () {
       expect(Difficulty.speed(45.0), 300.0);
-      expect(Difficulty.tier(45.0), 5);
+      expect(Difficulty.tier(45.0), 6);
       final gap = Difficulty.restGapRange(45.0);
       expect(gap.min, 0.95);
       expect(gap.max, 1.25);
     });
 
-    test('t = 100s: speed stays capped at 300, tier 5, rest gap stays at floor', () {
+    test('t = 100s: speed stays capped at 300, tier 8, rest gap stays at floor', () {
       expect(Difficulty.speed(100.0), 300.0);
-      expect(Difficulty.tier(100.0), 5);
+      expect(Difficulty.tier(100.0), 8);
       final gap = Difficulty.restGapRange(100.0);
       expect(gap.min, 0.95);
       expect(gap.max, 1.25);
+    });
+
+    test('Tier boundaries match addendum H0: t=7.9->1, 8->2, 16->3, 24->4, 36->5, 45->6, 60->7, 80->8', () {
+      expect(Difficulty.tier(0.0), 1);
+      expect(Difficulty.tier(7.9), 1);
+      expect(Difficulty.tier(8.0), 2);
+      expect(Difficulty.tier(15.9), 2);
+      expect(Difficulty.tier(16.0), 3);
+      expect(Difficulty.tier(23.9), 3);
+      expect(Difficulty.tier(24.0), 4);
+      expect(Difficulty.tier(35.9), 4);
+      expect(Difficulty.tier(36.0), 5);
+      expect(Difficulty.tier(44.9), 5);
+      expect(Difficulty.tier(45.0), 6);
+      expect(Difficulty.tier(59.9), 6);
+      expect(Difficulty.tier(60.0), 7);
+      expect(Difficulty.tier(79.9), 7);
+      expect(Difficulty.tier(80.0), 8);
+      expect(Difficulty.tier(120.0), 8);
     });
   });
 

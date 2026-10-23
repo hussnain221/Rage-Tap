@@ -80,7 +80,7 @@ void main() {
       expect(game.score.value, greaterThan(50));
       final finalScore = game.score.value;
 
-      game.die(ObstacleType.spike);
+      game.die(DeathCause.spike);
       _advance(game, 0.41);
       expect(game.state.value, GameState.results);
 
@@ -94,7 +94,7 @@ void main() {
       expect(result!.score, finalScore);
       expect(result.best, finalScore);
       expect(result.isNewBest, isTrue);
-      expect(result.deathCause, ObstacleType.spike);
+      expect(result.deathCause, DeathCause.spike);
       expect(result.durationSeconds, game.runTime);
 
       game.disposeGame();

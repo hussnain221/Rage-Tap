@@ -1,11 +1,13 @@
 import '../../core/constants.dart';
-import '../components/obstacle.dart';
+import 'hazard_geometry.dart';
+
+export 'hazard_geometry.dart' show DeathCause;
 
 class RunResult {
   final int score;
   final int best;
   final bool isNewBest;
-  final ObstacleType? deathCause;
+  final DeathCause? deathCause;
   final int nearMisses;
   final double durationSeconds;
 

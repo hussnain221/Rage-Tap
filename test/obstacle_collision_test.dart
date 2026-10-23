@@ -4,6 +4,7 @@ import 'package:rage_tap/game/components/obstacle.dart';
 import 'package:rage_tap/game/components/player.dart';
 import 'package:rage_tap/game/game_state.dart';
 import 'package:rage_tap/game/rage_tap_game.dart';
+import 'package:rage_tap/game/systems/hazard_geometry.dart';
 
 void _advance(RageTapGame game, double seconds) {
   const dt = 1 / 60;
@@ -78,7 +79,7 @@ void main() {
 
     // Player should immediately enter dying state
     expect(game.state.value, GameState.dying);
-    expect(game.lastDeathCause, ObstacleType.spike);
+    expect(game.lastDeathCause, DeathCause.spike);
 
     // After 0.40s death sequence (hit freeze 0.10s + death anim 0.30s), transition to results
     _advance(game, 0.41);

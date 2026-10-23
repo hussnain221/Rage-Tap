@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/audio/audio_service.dart';
 import 'package:rage_tap/data/save_service.dart';
-import 'package:rage_tap/game/components/obstacle.dart';
 import 'package:rage_tap/game/rage_tap_game.dart';
+import 'package:rage_tap/game/systems/hazard_geometry.dart';
 import 'package:rage_tap/ui/widgets/neon_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -128,7 +128,7 @@ void main() {
       expect(game.player.grounded, isFalse);
 
       // Trigger die with audio & haptics
-      expect(() => game.die(ObstacleType.spike), returnsNormally);
+      expect(() => game.die(DeathCause.spike), returnsNormally);
       expect(game.player.isDead, isTrue);
     });
   });

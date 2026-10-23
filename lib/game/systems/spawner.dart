@@ -3,24 +3,26 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 
 import '../../core/constants.dart';
-import '../components/obstacle.dart';
 import 'difficulty.dart';
+import 'hazard_geometry.dart';
 import 'pattern.dart';
 import 'pattern_library.dart';
 
 class SpawnItem {
-  final ObstacleType type;
+  final HazardType type;
   final int count;
   final double x;
+  final double pitWidth;
 
   const SpawnItem({
     required this.type,
     this.count = 1,
     required this.x,
+    this.pitWidth = 0.0,
   });
 
   @override
-  String toString() => 'SpawnItem(type: $type, count: $count, x: $x)';
+  String toString() => 'SpawnItem(type: $type, count: $count, x: $x, pitWidth: $pitWidth)';
 }
 
 class Spawner {
@@ -52,19 +54,15 @@ class Spawner {
   String? lastPatternId;
   int _consecutiveCount = 0;
   double _lastHazardTrailingX = 0.0;
-  ObstacleType? _lastHazardType;
+  HazardType? _lastHazardType;
   Pattern? _pendingPattern;
   double _pendingLeadSec = 0.0;
 
-  static double computeItemWidth(ObstacleType type, int count) {
-    switch (type) {
-      case ObstacleType.spike:
-        return C.spikeW * count;
-      case ObstacleType.barrier:
-        return C.barrierW;
-      case ObstacleType.charging:
-        return C.chargeW;
-    }
+  final Set<HazardType> _introducedTypes = {};
+  final List<HazardType> _pendingIntroQueue = [];
+
+  static double computeItemWidth(HazardType type, int count, [double pitWidth = 0.0]) {
+    return geometryFor(type, count: count, pitWidth: pitWidth).visualSize.x;
   }
 
   static double restMin(double t) => Difficulty.restGapRange(t).min;
@@ -89,7 +87,7 @@ class Spawner {
   }
 
   List<SpawnItem> update(double dt, double currentSpeed, double runTime) {
-    final lastSpeed = _lastHazardType == ObstacleType.charging
+    final lastSpeed = _lastHazardType == HazardType.charging
         ? currentSpeed + C.chargingExtraSpeed
         : currentSpeed;
     _lastHazardTrailingX -= lastSpeed * dt;
@@ -136,6 +134,43 @@ class Spawner {
       available = [library.first];
     }
 
+    // Intro rule: identify newly unlocked hazard types
+    final newlyUnlocked = <HazardType>{};
+    for (final p in available) {
+      for (final item in p.items) {
+        if (!_introducedTypes.contains(item.type) && !_pendingIntroQueue.contains(item.type)) {
+          newlyUnlocked.add(item.type);
+        }
+      }
+    }
+
+    if (newlyUnlocked.isNotEmpty) {
+      // Sort newly unlocked types by tier order (minimum tierStart of patterns containing that type)
+      final sortedNew = newlyUnlocked.toList()
+        ..sort((a, b) {
+          final aMinTier = library
+              .where((p) => p.items.any((i) => i.type == a))
+              .map((p) => p.tierStart)
+              .fold<double>(double.infinity, math.min);
+          final bMinTier = library
+              .where((p) => p.items.any((i) => i.type == b))
+              .map((p) => p.tierStart)
+              .fold<double>(double.infinity, math.min);
+          return aMinTier.compareTo(bMinTier);
+        });
+      _pendingIntroQueue.addAll(sortedNew);
+    }
+
+    // Check if an intro pattern must be forced
+    while (_pendingIntroQueue.isNotEmpty) {
+      final nextType = _pendingIntroQueue.removeAt(0);
+      _introducedTypes.add(nextType);
+      final introPattern = library.where((p) => p.introFor == nextType).firstOrNull;
+      if (introPattern != null) {
+        return _recordChoice(introPattern, runTime);
+      }
+    }
+
     // C1 may never directly follow another C1
     if (lastPatternId == 'C1') {
       final withoutC1 = available.where((p) => p.id != 'C1').toList();
@@ -152,18 +187,34 @@ class Spawner {
       }
     }
 
+    // Newest tier weight boost: patterns of newest unlocked tier get boosted
+    final newestUnlockedTier = Difficulty.tier(runTime);
+
+    double effectiveWeight(Pattern p) {
+      final patternTier = Difficulty.tier(p.tierStart);
+      if (patternTier == newestUnlockedTier) {
+        return p.weight * C.newTierWeightBoost;
+      }
+      return p.weight.toDouble();
+    }
+
     // Weighted random selection
-    final totalWeight = available.fold<int>(0, (sum, p) => sum + p.weight);
-    var roll = _random.nextInt(totalWeight);
+    final totalWeight = available.fold<double>(0.0, (sum, p) => sum + effectiveWeight(p));
+    var roll = _random.nextDouble() * totalWeight;
     Pattern chosen = available.first;
     for (final p in available) {
-      if (roll < p.weight) {
+      final w = effectiveWeight(p);
+      if (roll < w) {
         chosen = p;
         break;
       }
-      roll -= p.weight;
+      roll -= w;
     }
 
+    return _recordChoice(chosen, runTime);
+  }
+
+  Pattern _recordChoice(Pattern chosen, double runTime) {
     if (chosen.id == lastPatternId) {
       _consecutiveCount++;
     } else {
@@ -184,7 +235,7 @@ class Spawner {
 
     for (final item in pattern.items) {
       final itemX = startX + item.dxSeconds * speed;
-      final width = computeItemWidth(item.type, item.count);
+      final width = computeItemWidth(item.type, item.count, item.pitWidth);
       final itemTrailing = itemX + width;
       if (itemTrailing > maxTrailing) {
         maxTrailing = itemTrailing;
@@ -193,6 +244,7 @@ class Spawner {
         type: item.type,
         count: item.count,
         x: itemX,
+        pitWidth: item.pitWidth,
       ));
     }
 
@@ -208,5 +260,7 @@ class Spawner {
     _lastHazardType = null;
     _pendingPattern = null;
     _pendingLeadSec = 0.0;
+    _introducedTypes.clear();
+    _pendingIntroQueue.clear();
   }
 }

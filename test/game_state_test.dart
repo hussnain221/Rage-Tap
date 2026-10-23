@@ -31,7 +31,11 @@ void main() {
     expect(Difficulty.tier(24.0), 4);
     expect(Difficulty.tier(35.9), 4);
     expect(Difficulty.tier(36.0), 5);
-    expect(Difficulty.tier(100.0), 5);
+    expect(Difficulty.tier(44.9), 5);
+    expect(Difficulty.tier(45.0), 6);
+    expect(Difficulty.tier(60.0), 7);
+    expect(Difficulty.tier(80.0), 8);
+    expect(Difficulty.tier(100.0), 8);
   });
 
   test('RageTapGame legal transitions through full state machine', () {

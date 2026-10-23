@@ -48,7 +48,30 @@ class C {
   static const double restMinStart = 1.30, restMaxStart = 1.90;
   static const double restMinEnd = 0.95, restMaxEnd = 1.25;
   static const double restRampSeconds = 45;
-  static const List<double> tierStarts = [0, 8, 16, 24, 36];
+  static const List<double> tierStarts = [0, 8, 16, 24, 36, 45, 60, 80];
+
+  // ---- New hazards (addendum) ----
+  // Tall wall
+  static const double tallW = 30, tallH = 68;
+  static const double tallHitX = 3, tallHitY = 3, tallHitW = 24, tallHitH = 65;
+
+  // Overhead beam (top-anchored; world y coordinates)
+  static const double beamDroneTopY = 96;
+  static const double beamDroneW = 44, beamDroneH = 30;
+  static const double beamHitTopY = 126; // beamDroneTopY + beamDroneH
+  static const double beamBottomY = 450; // groundTopY - 50 (emitter tip)
+  static const double beamHitW = 12; // centered under the drone
+  static const double beamSafeHeight = 16; // player must be lower than this while overlapping
+
+  // Pits
+  static const double pitShortW = 80, pitMediumW = 110, pitLongW = 140;
+  static const double pitCenterInset = 6;
+  static const double airborneThreshold = 2;
+
+  // Pattern rules
+  static const double beamReactionSec = 0.20;
+  static const double afterBeamMinDxSec = 0.75;
+  static const double newTierWeightBoost = 1.5; // weight multiplier for patterns of the newest unlocked tier
 
   // FX
   static const double hitFreezeSec = 0.10;

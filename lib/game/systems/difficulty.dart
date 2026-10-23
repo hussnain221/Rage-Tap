@@ -10,18 +10,19 @@ class Difficulty {
     return s.clamp(C.baseSpeed, C.maxSpeed).toDouble();
   }
 
-  /// Computes difficulty tier (1..5) at run time [t] seconds.
-  /// Tier 1: t < 8
-  /// Tier 2: t < 16
-  /// Tier 3: t < 24
-  /// Tier 4: t < 36
-  /// Tier 5: t >= 36
+  /// Computes difficulty tier (1..8) at run time [t] seconds.
+  /// Uses C.tierStarts: [0, 8, 16, 24, 36, 45, 60, 80].
+  /// tier = number of starts <= t (clamped to 1..8).
   static int tier(double t) {
-    if (t < C.tierStarts[1]) return 1;
-    if (t < C.tierStarts[2]) return 2;
-    if (t < C.tierStarts[3]) return 3;
-    if (t < C.tierStarts[4]) return 4;
-    return 5;
+    int count = 0;
+    for (final start in C.tierStarts) {
+      if (t >= start) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    return count.clamp(1, C.tierStarts.length);
   }
 
   /// Computes the rest gap range [min, max] (in seconds) at run time [t] seconds.

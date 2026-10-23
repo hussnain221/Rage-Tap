@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import '../../core/constants.dart';
 import '../components/obstacle.dart';
+import 'hazard_geometry.dart';
 import 'pattern.dart';
 
 class PatternValidator {
@@ -9,6 +10,14 @@ class PatternValidator {
   static const double g = C.gravity;
   static const double tAir = 2 * v / g; // 0.64s
   static const double minGapTime = tAir + C.separateJumpReactionSec; // 0.89s
+
+  /// Time after takeoff when the player hitbox bottom rises above height H:
+  /// tStart(H) = (v - sqrt(v^2 - 2 * g * H)) / g
+  static double tStart(double h) {
+    final discriminant = v * v - 2 * g * h;
+    if (discriminant < 0) return double.infinity;
+    return (v - math.sqrt(discriminant)) / g;
+  }
 
   /// Time the player's hitbox bottom stays above height H:
   /// clearTime(H) = 2 * sqrt(v^2 - 2 * g * H) / g
@@ -18,40 +27,71 @@ class PatternValidator {
     return 2 * math.sqrt(discriminant) / g;
   }
 
+  /// Latest grounded time after clearing hazard of height H:
+  /// latestGround(H) = T_air - tStart(H) - tStart(16)
+  static double latestGround(double h) {
+    return tAir - tStart(h) - tStart(C.beamSafeHeight);
+  }
+
+  /// Timing window for crossing a pit of width W at relative speed s:
+  /// pitWindow(W, s) = (T_air - 2 * tStart(C.airborneThreshold)) - (W - 2 * C.pitCenterInset) / s
+  static double pitWindow(double w, double s) {
+    final airSpan = tAir - 2 * tStart(C.airborneThreshold);
+    return airSpan - (w - 2 * C.pitCenterInset) / s;
+  }
+
   /// Hitbox width of a hazard or hazard group:
   /// Spikes(n): 24n + 6(n - 1)
   /// Barrier: 24
+  /// TallWall: 24
   /// Charging: 26
-  static double groupHitboxWidth(ObstacleType type, int count) {
+  /// Beam: 12
+  /// Pit: W
+  static double groupHitboxWidth(HazardType type, int count, [double pitWidth = 0.0]) {
     switch (type) {
-      case ObstacleType.spike:
-        return 24 * count + 6 * (count - 1);
-      case ObstacleType.barrier:
+      case HazardType.spike:
+        return 24.0 * count + 6.0 * (count - 1);
+      case HazardType.barrier:
         return C.barrierHitW;
-      case ObstacleType.charging:
+      case HazardType.tallWall:
+        return C.tallHitW;
+      case HazardType.charging:
         return C.chargeHitW;
+      case HazardType.beam:
+        return C.beamHitW;
+      case HazardType.pit:
+        return pitWidth > 0 ? pitWidth : C.pitShortW;
     }
   }
 
   /// Hitbox height of hazard
-  static double hazardHitboxHeight(ObstacleType type) {
+  static double hazardHitboxHeight(HazardType type) {
     switch (type) {
-      case ObstacleType.spike:
+      case HazardType.spike:
         return C.spikeHitH; // 22
-      case ObstacleType.barrier:
+      case HazardType.barrier:
         return C.barrierHitH; // 53
-      case ObstacleType.charging:
+      case HazardType.tallWall:
+        return C.tallHitH; // 65
+      case HazardType.charging:
         return C.chargeHitH; // 30
+      case HazardType.beam:
+        return C.beamBottomY - C.beamHitTopY; // 324
+      case HazardType.pit:
+        return 0.0;
     }
   }
 
   /// Relative speed sRel = scroll speed (or scroll + 60 for charging block)
-  static double relativeSpeed(ObstacleType type, double scrollSpeed) {
+  static double relativeSpeed(HazardType type, double scrollSpeed) {
     switch (type) {
-      case ObstacleType.spike:
-      case ObstacleType.barrier:
+      case HazardType.spike:
+      case HazardType.barrier:
+      case HazardType.tallWall:
+      case HazardType.beam:
+      case HazardType.pit:
         return scrollSpeed;
-      case ObstacleType.charging:
+      case HazardType.charging:
         return scrollSpeed + C.chargingExtraSpeed;
     }
   }
@@ -59,12 +99,16 @@ class PatternValidator {
   /// Timing window (seconds) for clearing a single-jump group:
   /// window = clearTime(H) - (groupHitboxWidth + 28) / sRel
   static double timingWindow({
-    required ObstacleType type,
+    required HazardType type,
     required int count,
     required double sRel,
+    double pitWidth = 0.0,
   }) {
+    if (type == HazardType.pit) {
+      return pitWindow(pitWidth > 0 ? pitWidth : C.pitShortW, sRel);
+    }
     final h = hazardHitboxHeight(type);
-    final w = groupHitboxWidth(type, count);
+    final w = groupHitboxWidth(type, count, pitWidth);
     return clearTime(h) - (w + C.playerHitW) / sRel;
   }
 
@@ -88,7 +132,7 @@ class PatternValidator {
     final sRelA = relativeSpeed(a.type, speed);
     final sRelB = relativeSpeed(b.type, speed);
     final dxSec = b.dxSeconds - a.dxSeconds;
-    final widthA = groupHitboxWidth(a.type, a.count);
+    final widthA = groupHitboxWidth(a.type, a.count, a.pitWidth);
 
     if (sRelA == sRelB) {
       return dxSec - (widthA / sRelA);
@@ -119,6 +163,7 @@ class PatternValidator {
           type: item.type,
           count: item.count,
           sRel: sRel,
+          pitWidth: item.pitWidth,
         );
         if (window < C.minTimingWindowSec - 0.0001) {
           violations.add(

@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import '../components/obstacle.dart';
+import 'hazard_geometry.dart';
 
 /// Pure selection of post-game funny result messages per spec Appendix B.
 class ResultMessages {
@@ -56,7 +56,7 @@ class ResultMessages {
     required bool isNewBest,
     required int score,
     required int bestScore,
-    ObstacleType? deathCause,
+    DeathCause? deathCause,
     String? lastMessage,
     math.Random? random,
   }) {
@@ -82,20 +82,27 @@ class ResultMessages {
     if (deathCause != null && rand.nextBool()) {
       List<String>? pool;
       switch (deathCause) {
-        case ObstacleType.spike:
+        case DeathCause.spike:
           pool = spikePool;
           break;
-        case ObstacleType.barrier:
+        case DeathCause.barrier:
           pool = barrierPool;
           break;
-        case ObstacleType.charging:
+        case DeathCause.charging:
           pool = chargingPool;
+          break;
+        case DeathCause.tallWall:
+        case DeathCause.beam:
+        case DeathCause.pit:
+          pool = null;
           break;
       }
 
-      final candidates = pool.where((m) => m != lastMessage).toList();
-      if (candidates.isNotEmpty) {
-        return candidates[rand.nextInt(candidates.length)];
+      if (pool != null) {
+        final candidates = pool.where((m) => m != lastMessage).toList();
+        if (candidates.isNotEmpty) {
+          return candidates[rand.nextInt(candidates.length)];
+        }
       }
     }
 

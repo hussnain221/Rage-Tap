@@ -12,6 +12,7 @@ class Palette {
   static const Color cyanDark = Color(0xFF0FA3B8);
   static const Color orange = Color(0xFFFF8A1F);
   static const Color magenta = Color(0xFFFF2E93);
+  static const Color magentaDark = Color(0xFF9E1A63);
   static const Color yellow = Color(0xFFFFD23F);
   static const Color green = Color(0xFF3DDC97);
   static const Color white = Color(0xFFF4F7FF);

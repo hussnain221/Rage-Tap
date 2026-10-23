@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rage_tap/game/components/obstacle.dart';
+import 'package:rage_tap/game/systems/hazard_geometry.dart';
 import 'package:rage_tap/game/game_state.dart';
 import 'package:rage_tap/game/rage_tap_game.dart';
 import 'package:rage_tap/game/systems/result_messages.dart';
@@ -53,7 +53,7 @@ void main() {
           isNewBest: false,
           score: 20,
           bestScore: 100,
-          deathCause: ObstacleType.spike,
+          deathCause: DeathCause.spike,
           random: fixedRand,
         );
         if (ResultMessages.spikePool.contains(msg)) {
@@ -72,7 +72,7 @@ void main() {
           isNewBest: false,
           score: 20,
           bestScore: 100,
-          deathCause: ObstacleType.barrier,
+          deathCause: DeathCause.barrier,
           random: fixedRand,
         );
         if (ResultMessages.barrierPool.contains(msg)) {
@@ -91,7 +91,7 @@ void main() {
           isNewBest: false,
           score: 20,
           bestScore: 100,
-          deathCause: ObstacleType.charging,
+          deathCause: DeathCause.charging,
           random: fixedRand,
         );
         if (ResultMessages.chargingPool.contains(msg)) {

@@ -61,7 +61,7 @@ class RageTapGame extends FlameGame {
   int nearMissCount = 0;
   double nearMissCooldown = 0.0;
 
-  ObstacleType? lastDeathCause;
+  DeathCause? lastDeathCause;
   RunResult? lastResult;
   int _bestAtStart = 0;
   bool _runResultRecorded = false;
@@ -105,14 +105,12 @@ class RageTapGame extends FlameGame {
   }
 
   Obstacle _createObstacle(SpawnItem item) {
-    switch (item.type) {
-      case ObstacleType.spike:
-        return Obstacle.spike(x: item.x, count: item.count);
-      case ObstacleType.barrier:
-        return Obstacle.barrier(x: item.x);
-      case ObstacleType.charging:
-        return Obstacle.charging(x: item.x);
-    }
+    return Obstacle(
+      type: item.type,
+      initialX: item.x,
+      count: item.count,
+      pitWidth: item.pitWidth,
+    );
   }
 
   @override
@@ -162,7 +160,7 @@ class RageTapGame extends FlameGame {
         final obstacle = _activeObstacles[i];
         if (obstacle.isRemoving) continue;
         if (playerHitbox.overlaps(obstacle.hitbox)) {
-          die(obstacle.type);
+          die(DeathCause.values.byName(obstacle.type.name));
           collided = true;
           break;
         }
@@ -268,7 +266,7 @@ class RageTapGame extends FlameGame {
     particles.spawnLandingDust(position);
   }
 
-  void die([ObstacleType? cause]) {
+  void die([DeathCause? cause]) {
     if (_hasDied || state.value != GameState.playing) return;
     AudioService.instance.playHit();
     HapticsService.hit();

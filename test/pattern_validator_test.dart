@@ -1,12 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/game/components/obstacle.dart';
+import 'package:rage_tap/game/systems/hazard_geometry.dart';
 import 'package:rage_tap/game/systems/pattern.dart';
 import 'package:rage_tap/game/systems/pattern_library.dart';
 import 'package:rage_tap/game/systems/pattern_validator.dart';
 
 void main() {
   group('PatternValidator formula tests', () {
-    test('clearTime(H) matches spec §8.2 values', () {
+    test('clearTime(H) matches spec values', () {
       // H=22 (spike) -> ~0.567 s
       expect(PatternValidator.clearTime(22), closeTo(0.5671, 0.002));
 
@@ -15,23 +16,68 @@ void main() {
 
       // H=30 (charging) -> ~0.538 s
       expect(PatternValidator.clearTime(30), closeTo(0.5381, 0.002));
+
+      // H=65 (tall wall) -> ~0.3868 s
+      expect(PatternValidator.clearTime(65), closeTo(0.3868, 0.002));
     });
 
-    test('groupHitboxWidth formula matches 24n + 6(n-1) for spikes, 24 barrier, 26 charging', () {
-      expect(PatternValidator.groupHitboxWidth(ObstacleType.spike, 1), 24);
-      expect(PatternValidator.groupHitboxWidth(ObstacleType.spike, 2), 54);
-      expect(PatternValidator.groupHitboxWidth(ObstacleType.spike, 3), 84);
-      expect(PatternValidator.groupHitboxWidth(ObstacleType.barrier, 1), 24);
-      expect(PatternValidator.groupHitboxWidth(ObstacleType.charging, 1), 26);
+    test('tStart(H) reference values match addendum section 2 within ±0.002', () {
+      expect(PatternValidator.tStart(22), closeTo(0.0365, 0.002));
+      expect(PatternValidator.tStart(53), closeTo(0.0978, 0.002));
+      expect(PatternValidator.tStart(65), closeTo(0.1266, 0.002));
+      expect(PatternValidator.tStart(16), closeTo(0.0261, 0.002));
+    });
+
+    test('Tall wall window reference values at s=190, 210, 300 match addendum section 2', () {
+      final window190 = PatternValidator.timingWindow(
+        type: HazardType.tallWall,
+        count: 1,
+        sRel: 190,
+      );
+      expect(window190, closeTo(0.1131, 0.002));
+      expect(window190 < 0.12, isTrue, reason: 'Must be invalid at 190');
+
+      final window210 = PatternValidator.timingWindow(
+        type: HazardType.tallWall,
+        count: 1,
+        sRel: 210,
+      );
+      expect(window210, closeTo(0.1392, 0.002));
+      expect(window210 >= 0.12, isTrue, reason: 'Must be valid at 210');
+
+      final window300 = PatternValidator.timingWindow(
+        type: HazardType.tallWall,
+        count: 1,
+        sRel: 300,
+      );
+      expect(window300, closeTo(0.2135, 0.002));
+      expect(window300 >= 0.12, isTrue, reason: 'Must be valid at 300');
+    });
+
+    test('pitWindow reference values match addendum section 2 within ±0.002', () {
+      expect(PatternValidator.pitWindow(80, 190), closeTo(0.2758, 0.002));
+      expect(PatternValidator.pitWindow(110, 190), closeTo(0.1179, 0.002));
+      expect(PatternValidator.pitWindow(110, 200), closeTo(0.1437, 0.002));
+      expect(PatternValidator.pitWindow(140, 255), closeTo(0.1317, 0.002));
+    });
+
+    test('groupHitboxWidth formula matches hazard geometry', () {
+      expect(PatternValidator.groupHitboxWidth(HazardType.spike, 1), 24);
+      expect(PatternValidator.groupHitboxWidth(HazardType.spike, 2), 54);
+      expect(PatternValidator.groupHitboxWidth(HazardType.spike, 3), 84);
+      expect(PatternValidator.groupHitboxWidth(HazardType.barrier, 1), 24);
+      expect(PatternValidator.groupHitboxWidth(HazardType.tallWall, 1), 24);
+      expect(PatternValidator.groupHitboxWidth(HazardType.charging, 1), 26);
+      expect(PatternValidator.groupHitboxWidth(HazardType.beam, 1), 12);
+      expect(PatternValidator.groupHitboxWidth(HazardType.pit, 1, 80), 80);
     });
 
     test('timingWindow calculates window and satisfies >= 0.12s for single spikes at 190', () {
       final window = PatternValidator.timingWindow(
-        type: ObstacleType.spike,
+        type: HazardType.spike,
         count: 1,
         sRel: 190,
       );
-      // clearTime(22) = 0.5671s, (24 + 28)/190 = 0.2737s => window = 0.2934s
       expect(window, closeTo(0.2934, 0.01));
       expect(window, greaterThanOrEqualTo(0.12));
     });
@@ -66,8 +112,8 @@ void main() {
         tierStart: 0,
         weight: 1,
         items: [
-          PatternItem(type: ObstacleType.barrier, dxSeconds: 0.0),
-          PatternItem(type: ObstacleType.barrier, dxSeconds: 0.5),
+          PatternItem(type: HazardType.barrier, dxSeconds: 0.0),
+          PatternItem(type: HazardType.barrier, dxSeconds: 0.5),
         ],
       );
 

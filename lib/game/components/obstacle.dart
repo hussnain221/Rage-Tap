@@ -5,32 +5,40 @@ import 'package:flutter/material.dart';
 import '../../core/constants.dart';
 import '../painting/hazard_painters.dart';
 import '../rage_tap_game.dart';
+import '../systems/hazard_geometry.dart';
 
-enum ObstacleType {
-  spike,
-  barrier,
-  charging,
-}
+export '../systems/hazard_geometry.dart' show HazardType;
+typedef ObstacleType = HazardType;
 
 class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
   Obstacle({
     required this.type,
     required double initialX,
     this.count = 1,
-  }) : super(
+    this.pitWidth = 0,
+  })  : geometry = geometryFor(type, count: count, pitWidth: pitWidth),
+        super(
           position: Vector2(
             initialX,
-            C.groundTopY - _computeHeight(type),
+            _computeY(geometryFor(type, count: count, pitWidth: pitWidth)),
           ),
-          size: Vector2(
-            _computeWidth(type, count),
-            _computeHeight(type),
-          ),
+          size: geometryFor(type, count: count, pitWidth: pitWidth).visualSize,
         );
+
+  static double _computeY(HazardGeometry geo) {
+    switch (geo.anchor) {
+      case HazardAnchor.ground:
+        return C.groundTopY - geo.visualSize.y;
+      case HazardAnchor.top:
+        return C.beamDroneTopY;
+      case HazardAnchor.hole:
+        return C.groundTopY;
+    }
+  }
 
   factory Obstacle.spike({required double x, int count = 1}) {
     return Obstacle(
-      type: ObstacleType.spike,
+      type: HazardType.spike,
       initialX: x,
       count: count,
     );
@@ -38,7 +46,7 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
 
   factory Obstacle.barrier({required double x}) {
     return Obstacle(
-      type: ObstacleType.barrier,
+      type: HazardType.barrier,
       initialX: x,
       count: 1,
     );
@@ -46,14 +54,16 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
 
   factory Obstacle.charging({required double x}) {
     return Obstacle(
-      type: ObstacleType.charging,
+      type: HazardType.charging,
       initialX: x,
       count: 1,
     );
   }
 
-  final ObstacleType type;
+  final HazardType type;
   final int count;
+  final double pitWidth;
+  final HazardGeometry geometry;
 
   bool passed = false;
   double minClearance = double.infinity;
@@ -70,53 +80,7 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
     }
   }
 
-  static double _computeWidth(ObstacleType type, int count) {
-    switch (type) {
-      case ObstacleType.spike:
-        return C.spikeW * count;
-      case ObstacleType.barrier:
-        return C.barrierW;
-      case ObstacleType.charging:
-        return C.chargeW;
-    }
-  }
-
-  static double _computeHeight(ObstacleType type) {
-    switch (type) {
-      case ObstacleType.spike:
-        return C.spikeH;
-      case ObstacleType.barrier:
-        return C.barrierH;
-      case ObstacleType.charging:
-        return C.chargeH;
-    }
-  }
-
-  Rect get relativeHitbox {
-    switch (type) {
-      case ObstacleType.spike:
-        return Rect.fromLTWH(
-          C.spikeHitX,
-          C.spikeHitY,
-          size.x - (C.spikeHitX * 2),
-          C.spikeHitH,
-        );
-      case ObstacleType.barrier:
-        return const Rect.fromLTWH(
-          C.barrierHitX,
-          C.barrierHitY,
-          C.barrierHitW,
-          C.barrierHitH,
-        );
-      case ObstacleType.charging:
-        return const Rect.fromLTWH(
-          C.chargeHitX,
-          C.chargeHitY,
-          C.chargeHitW,
-          C.chargeHitH,
-        );
-    }
-  }
+  Rect get relativeHitbox => geometry.relativeHitbox;
 
   Rect get hitbox => Rect.fromLTWH(
         x + relativeHitbox.left,
@@ -126,9 +90,7 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
       );
 
   void move(double scrollSpeed, double dt) {
-    final speed = type == ObstacleType.charging
-        ? scrollSpeed + C.chargingExtraSpeed
-        : scrollSpeed;
+    final speed = scrollSpeed + geometry.extraSpeed;
     x -= speed * dt;
   }
 
@@ -142,14 +104,18 @@ class Obstacle extends PositionComponent with HasGameReference<RageTapGame> {
     super.render(canvas);
 
     switch (type) {
-      case ObstacleType.spike:
+      case HazardType.spike:
         HazardPainters.paintSpikes(canvas, count: count);
         break;
-      case ObstacleType.barrier:
+      case HazardType.barrier:
         HazardPainters.paintBarrier(canvas);
         break;
-      case ObstacleType.charging:
+      case HazardType.charging:
         HazardPainters.paintChargingBlock(canvas);
+        break;
+      case HazardType.tallWall:
+      case HazardType.beam:
+      case HazardType.pit:
         break;
     }
 

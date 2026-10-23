@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/core/constants.dart';
-import 'package:rage_tap/game/components/obstacle.dart';
+import 'package:rage_tap/game/systems/hazard_geometry.dart';
+import 'package:rage_tap/game/systems/pattern.dart';
 import 'package:rage_tap/game/systems/spawner.dart';
 
 void main() {
@@ -57,7 +58,7 @@ void main() {
         final pattern = spawner.pickPattern(runTime: t, speed: C.baseSpeed);
         expect(pattern.id, 'S1');
         expect(pattern.items.first.count, 1);
-        expect(pattern.items.first.type, ObstacleType.spike);
+        expect(pattern.items.first.type, HazardType.spike);
       }
 
       // At t >= 8.0s, B1 and S2 unlock
@@ -124,7 +125,7 @@ void main() {
         final items = spawner.update(dt, C.baseSpeed, i * dt);
         for (final item in items) {
           expect(item.x, greaterThanOrEqualTo(C.worldW + 40));
-          expect([ObstacleType.spike, ObstacleType.barrier], contains(item.type));
+          expect([HazardType.spike, HazardType.barrier], contains(item.type));
         }
       }
     });
@@ -153,7 +154,7 @@ void main() {
       for (int i = 0; i < 2500; i++) {
         final items = spawner.update(dt, speed, 25.0 + i * dt);
         for (final item in items) {
-          if (item.type == ObstacleType.charging) {
+          if (item.type == HazardType.charging) {
             chargingItem = item;
             break;
           }
@@ -163,6 +164,55 @@ void main() {
 
       expect(chargingItem, isNotNull);
       expect(chargingItem!.x, expectedTelegraphX);
+    });
+
+    test('Intro rule: forces intro pattern when hazard type becomes available', () {
+      final fakeLibrary = [
+        const Pattern(
+          id: 'BASE_SPIKE',
+          minSpeed: 190,
+          tierStart: 0,
+          weight: 5,
+          items: [PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0)],
+        ),
+        const Pattern(
+          id: 'WALL_INTRO',
+          minSpeed: 190,
+          tierStart: 45,
+          weight: 1,
+          introFor: HazardType.tallWall,
+          items: [PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0)],
+        ),
+        const Pattern(
+          id: 'WALL_REGULAR',
+          minSpeed: 190,
+          tierStart: 45,
+          weight: 20,
+          items: [PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0)],
+        ),
+      ];
+
+      final spawner = Spawner(seed: 123, library: fakeLibrary);
+
+      // At t < 45, only BASE_SPIKE is available
+      final p1 = spawner.pickPattern(runTime: 10.0, speed: 190);
+      expect(p1.id, 'BASE_SPIKE');
+
+      // At t = 45, tallWall unlocks. Even though WALL_REGULAR has 20x the weight,
+      // the intro rule must force WALL_INTRO first!
+      final p2 = spawner.pickPattern(runTime: 45.0, speed: 190);
+      expect(p2.id, 'WALL_INTRO');
+
+      // Subsequent picks can be regular patterns
+      bool pickedRegular = false;
+      for (int i = 0; i < 20; i++) {
+        final p = spawner.pickPattern(runTime: 46.0, speed: 190);
+        if (p.id == 'WALL_REGULAR') {
+          pickedRegular = true;
+          break;
+        }
+      }
+      expect(pickedRegular, isTrue);
     });
   });
 }
