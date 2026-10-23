@@ -50,6 +50,11 @@ class ResultMessages {
     'Jump higher. Or earlier. Or both.',
   ];
 
+  static const List<String> beamPool = [
+    "The beam said DON'T JUMP.",
+    'Rule one of beams: stay low.',
+  ];
+
   /// Pure function that chooses a result message according to selection order:
   /// 1. New best
   /// 2. Near-best (score >= 80% of best, score > 0, not new best)
@@ -100,6 +105,8 @@ class ResultMessages {
           pool = tallWallPool;
           break;
         case DeathCause.beam:
+          pool = beamPool;
+          break;
         case DeathCause.pit:
           pool = null;
           break;

@@ -113,6 +113,65 @@ class HazardPainters {
     ..color = Palette.yellow
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
+  // --- Overhead beam cached assets ---
+  static const double _beamDroneW = C.beamDroneW; // 44
+  static const double _beamDroneH = C.beamDroneH; // 30
+  static const double _beamTotalH = C.beamBottomY - C.beamDroneTopY; // 354
+  static const double _beamColW = 10.0;
+  static const double _beamColX = (_beamDroneW - _beamColW) / 2; // 17
+
+  static final RRect _droneRRect = RRect.fromRectAndRadius(
+    const Rect.fromLTWH(0, 0, _beamDroneW, _beamDroneH),
+    const Radius.circular(10),
+  );
+
+  static final RRect _droneStripRRect = RRect.fromRectAndRadius(
+    const Rect.fromLTWH(6, 3, 32, 4),
+    const Radius.circular(2),
+  );
+
+  static final Paint _droneBodyPaint = Paint()
+    ..color = Palette.magentaDark
+    ..style = PaintingStyle.fill;
+
+  static final Paint _droneStripPaint = Paint()
+    ..color = Colors.white.withValues(alpha: 0.25)
+    ..style = PaintingStyle.fill;
+
+  static final Paint _droneEyePaint = Paint()
+    ..color = Palette.orange
+    ..style = PaintingStyle.fill;
+
+  static final Paint _droneRotorPaint = Paint()
+    ..color = Colors.white.withValues(alpha: 0.40)
+    ..style = PaintingStyle.fill;
+
+  static const Rect _beamColRect = Rect.fromLTWH(
+    _beamColX,
+    _beamDroneH,
+    _beamColW,
+    _beamTotalH - _beamDroneH,
+  );
+
+  static final Paint _beamColumnPaint = Paint()
+    ..shader = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Palette.orange, Palette.magenta],
+    ).createShader(_beamColRect);
+
+  static final Paint _beamGlowPaint = Paint()
+    ..color = Palette.magenta.withValues(alpha: 0.40)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+
+  static final Paint _emitterGlowPaint = Paint()
+    ..color = Palette.orange.withValues(alpha: 0.60)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+
+  static final Paint _emitterCorePaint = Paint()
+    ..color = Palette.white
+    ..style = PaintingStyle.fill;
+
   // --- Charging block cached assets ---
   static final RRect _chargeRRect = RRect.fromRectAndRadius(
     const Rect.fromLTWH(0, 0, C.chargeW, C.chargeH),
@@ -278,6 +337,52 @@ class HazardPainters {
     _tallAntennaTipGlowPaint.color = Palette.yellow.withValues(alpha: 0.5 * pulse);
     canvas.drawCircle(const Offset(15, -8), 3.0, _tallAntennaTipGlowPaint);
     canvas.drawCircle(const Offset(15, -8), 3.0, _tallAntennaTipPaint);
+
+    canvas.restore();
+  }
+
+  /// Paints overhead beam: 44x354 drone body at top, vertical beam column,
+  /// glowing emitter tip at y=354.
+  static void paintOverheadBeam(
+    Canvas canvas, {
+    Offset origin = Offset.zero,
+    double t = 0.0,
+  }) {
+    canvas.save();
+    canvas.translate(origin.dx, origin.dy);
+
+    // 1. Beam outer glow (soft pulse at ~2.5 Hz, alpha 0.75-1.0)
+    final pulse = 0.75 + 0.25 * math.sin(t * 2.5 * 2 * math.pi);
+    _beamGlowPaint.color = Palette.magenta.withValues(alpha: 0.40 * pulse);
+    canvas.drawRect(_beamColRect, _beamGlowPaint);
+
+    // 2. Beam column (width 10, vertical gradient orange to magenta)
+    canvas.drawRect(_beamColRect, _beamColumnPaint);
+
+    // 3. Emitter tip at y=354: glowing circle radius 8 (orange glow, white core)
+    const tipCenter = Offset(_beamDroneW / 2, _beamTotalH);
+    canvas.drawCircle(tipCenter, 8.0, _emitterGlowPaint);
+    canvas.drawCircle(tipCenter, 4.0, _emitterCorePaint);
+
+    // 4. Drone body (44x30 rounded rect radius 10 in magentaDark)
+    canvas.drawRRect(_droneRRect, _droneBodyPaint);
+
+    // 5. Lighter top strip
+    canvas.drawRRect(_droneStripRRect, _droneStripPaint);
+
+    // 6. Orange eye light in center (radius 4)
+    canvas.drawCircle(const Offset(_beamDroneW / 2, _beamDroneH / 2), 4.0, _droneEyePaint);
+
+    // 7. Two tiny rotor ellipses on sides (rotating at 12 Hz)
+    final rotorW = 8.0 + 4.0 * math.sin(t * 12.0 * 2 * math.pi);
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(3, 8), width: rotorW.abs(), height: 3.5),
+      _droneRotorPaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(_beamDroneW - 3, 8), width: rotorW.abs(), height: 3.5),
+      _droneRotorPaint,
+    );
 
     canvas.restore();
   }

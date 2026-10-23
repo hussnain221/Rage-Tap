@@ -235,6 +235,86 @@ class PatternLibrary {
     ],
   );
 
+  // Tier 7 (t >= 60s) - Overhead Beam (minSpeed 190)
+  static const Pattern d1 = Pattern(
+    id: 'D1',
+    minSpeed: 190,
+    tierStart: 60,
+    weight: 3,
+    introFor: HazardType.beam,
+    items: [
+      PatternItem(type: HazardType.beam, count: 1, dxSeconds: 0),
+    ],
+  );
+
+  static const Pattern d2 = Pattern(
+    id: 'D2',
+    minSpeed: 190,
+    tierStart: 60,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.beam, count: 1, dxSeconds: 1.20),
+    ],
+  );
+
+  static const Pattern d3 = Pattern(
+    id: 'D3',
+    minSpeed: 190,
+    tierStart: 60,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.beam, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 1.00),
+    ],
+  );
+
+  static const Pattern d4 = Pattern(
+    id: 'D4',
+    minSpeed: 190,
+    tierStart: 60,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.beam, count: 1, dxSeconds: 1.25),
+    ],
+  );
+
+  static const Pattern d5 = Pattern(
+    id: 'D5',
+    minSpeed: 190,
+    tierStart: 60,
+    weight: 2,
+    items: [
+      PatternItem(type: HazardType.beam, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 1.10),
+    ],
+  );
+
+  static const Pattern d6 = Pattern(
+    id: 'D6',
+    minSpeed: 190,
+    tierStart: 60,
+    weight: 1,
+    items: [
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.beam, count: 1, dxSeconds: 1.20),
+      PatternItem(type: HazardType.spike, count: 1, dxSeconds: 2.30),
+    ],
+  );
+
+  static const Pattern d7 = Pattern(
+    id: 'D7',
+    minSpeed: 210,
+    tierStart: 60,
+    weight: 1,
+    items: [
+      PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0),
+      PatternItem(type: HazardType.beam, count: 1, dxSeconds: 1.30),
+      PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 2.40),
+    ],
+  );
+
   static const List<Pattern> patterns = [
     s1,
     s2,
@@ -256,5 +336,12 @@ class PatternLibrary {
     r3s,
     r4,
     r5,
+    d1,
+    d2,
+    d3,
+    d4,
+    d5,
+    d6,
+    d7,
   ];
 }

@@ -12,6 +12,7 @@ class SaveService {
   static const String keyHapticsEnabled = 'haptics_enabled';
   static const String keyFirstRunDone = 'first_run_done';
   static const String keyTotalRuns = 'total_runs';
+  static const String keyBeamHintShown = 'beam_hint_shown';
 
   SharedPreferences? _prefs;
 
@@ -107,6 +108,22 @@ class SaveService {
     final next = totalRuns + 1;
     if (_prefs != null) {
       await _prefs!.setInt(keyTotalRuns, next);
+    }
+  }
+
+  bool get beamHintShown {
+    final val = _prefs?.get(keyBeamHintShown);
+    if (val is bool) return val;
+    return false;
+  }
+
+  set beamHintShown(bool value) {
+    _prefs?.setBool(keyBeamHintShown, value);
+  }
+
+  Future<void> setBeamHintShown(bool value) async {
+    if (_prefs != null) {
+      await _prefs!.setBool(keyBeamHintShown, value);
     }
   }
 

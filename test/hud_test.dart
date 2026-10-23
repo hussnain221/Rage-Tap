@@ -106,4 +106,36 @@ void main() {
 
     expect(find.byType(GameHud), findsOneWidget);
   });
+
+  testWidgets('GameHud renders hint text with fade and ignores touches', (tester) async {
+    final game = RageTapGame(seed: 42);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: GameHud(game: game),
+        ),
+      ),
+    );
+
+    // Initially no hint
+    expect(find.text('STAY LOW!'), findsNothing);
+
+    // Set hint
+    game.hint.value = 'STAY LOW!';
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(find.text('STAY LOW!'), findsOneWidget);
+    // IgnorePointer wraps hint so it does not block touches
+    final ignorePointers = tester.widgetList<IgnorePointer>(
+      find.ancestor(of: find.text('STAY LOW!'), matching: find.byType(IgnorePointer)),
+    );
+    expect(ignorePointers.any((p) => p.ignoring), isTrue);
+
+    // Clear hint
+    game.hint.value = null;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(find.text('STAY LOW!'), findsNothing);
+  });
 }

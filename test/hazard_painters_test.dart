@@ -80,6 +80,22 @@ void main() {
       expect(picture, isNotNull);
     });
 
+    test('renders Overhead Beam with drone body, column, tip, and rotors without error', () {
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      for (double t = 0.0; t <= 1.0; t += 0.25) {
+        HazardPainters.paintOverheadBeam(
+          canvas,
+          origin: const Offset(20, 20),
+          t: t,
+        );
+      }
+
+      final picture = recorder.endRecording();
+      expect(picture, isNotNull);
+    });
+
     test('Obstacle hitboxes and dimensions remain unchanged', () {
       final spike1 = Obstacle.spike(x: 100, count: 1);
       expect(spike1.size.x, C.spikeW);
@@ -108,6 +124,13 @@ void main() {
       expect(charge.size.y, C.chargeH);
       expect(charge.relativeHitbox.width, C.chargeHitW);
       expect(charge.relativeHitbox.height, C.chargeHitH);
+
+      final beam = Obstacle.beam(x: 100);
+      expect(beam.size.x, C.beamDroneW);
+      expect(beam.size.y, C.beamBottomY - C.beamDroneTopY);
+      expect(beam.relativeHitbox.width, C.beamHitW);
+      expect(beam.relativeHitbox.height, C.beamBottomY - C.beamHitTopY);
+      expect(beam.y, C.beamDroneTopY);
     });
 
     test('Obstacle.render invokes painter without error', () {
@@ -118,11 +141,13 @@ void main() {
       final barrier = Obstacle.barrier(x: 100);
       final charge = Obstacle.charging(x: 100);
       final tallWall = Obstacle.tallWall(x: 100);
+      final beam = Obstacle.beam(x: 100);
 
       spike.render(canvas);
       barrier.render(canvas);
       charge.render(canvas);
       tallWall.render(canvas);
+      beam.render(canvas);
 
       final picture = recorder.endRecording();
       expect(picture, isNotNull);

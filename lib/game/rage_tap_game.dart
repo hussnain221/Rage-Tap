@@ -60,6 +60,8 @@ class RageTapGame extends FlameGame {
   int bonusScore = 0;
   int nearMissCount = 0;
   double nearMissCooldown = 0.0;
+  final ValueNotifier<String?> hint = ValueNotifier<String?>(null);
+  double? _hintTimer;
 
   DeathCause? lastDeathCause;
   RunResult? lastResult;
@@ -94,6 +96,8 @@ class RageTapGame extends FlameGame {
 
   void _clearObstacles() {
     _activeObstacles.clear();
+    hint.value = null;
+    _hintTimer = null;
     for (final child in world.children.toList()) {
       if (child is Obstacle) {
         child.x = -1000;
@@ -117,6 +121,15 @@ class RageTapGame extends FlameGame {
   void update(double dt) {
     final clampedDt = dt.clamp(0.0, C.maxDt).toDouble();
 
+    // Update hint timer
+    if (_hintTimer != null) {
+      _hintTimer = _hintTimer! - clampedDt;
+      if (_hintTimer! <= 0) {
+        _hintTimer = null;
+        hint.value = null;
+      }
+    }
+
     if (state.value == GameState.resuming) {
       _updateResumeCountdown(clampedDt);
     } else if (state.value == GameState.playing) {
@@ -133,6 +146,17 @@ class RageTapGame extends FlameGame {
       for (final child in world.children) {
         if (child is Obstacle && !child.isRemoving) {
           _activeObstacles.add(child);
+        }
+      }
+
+      // Teaching hint (one-time for beam)
+      if (!_saveService.beamHintShown) {
+        for (int i = 0; i < _activeObstacles.length; i++) {
+          final obs = _activeObstacles[i];
+          if (obs.type == HazardType.beam && obs.x < C.worldW) {
+            _triggerBeamHint();
+            break;
+          }
         }
       }
 
@@ -166,7 +190,7 @@ class RageTapGame extends FlameGame {
         }
       }
 
-      // If no collision happened, track clearance and evaluate near-misses
+      // If no collision happened, track clearance and evaluate near-misses (skip beam)
       if (!collided) {
         if (nearMissCooldown > 0) {
           nearMissCooldown -= clampedDt;
@@ -174,7 +198,7 @@ class RageTapGame extends FlameGame {
 
         for (int i = 0; i < _activeObstacles.length; i++) {
           final obstacle = _activeObstacles[i];
-          if (obstacle.isRemoving) continue;
+          if (obstacle.isRemoving || obstacle.type == HazardType.beam) continue;
           obstacle.updateClearance(playerHitbox);
 
           if (!obstacle.passed && obstacle.hitbox.right < playerHitbox.left) {
@@ -207,6 +231,12 @@ class RageTapGame extends FlameGame {
     world.add(PopupText(
       initialPosition: Vector2(player.x + C.playerSize / 2, player.y - 12),
     ));
+  }
+
+  void _triggerBeamHint() {
+    _saveService.setBeamHintShown(true);
+    hint.value = 'STAY LOW!';
+    _hintTimer = 1.6;
   }
 
   static double get _startTime {
@@ -387,5 +417,6 @@ class RageTapGame extends FlameGame {
     resumeCountdown.dispose();
     scoreBonusTrigger.dispose();
     showHitboxes.dispose();
+    hint.dispose();
   }
 }

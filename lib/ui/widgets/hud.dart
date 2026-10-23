@@ -101,22 +101,46 @@ class _GameHudState extends State<GameHud>
             ),
           ),
 
-          // Center: Live run score with pop animation
+          // Center: Live run score with pop animation and teaching hint below
           Expanded(
-            child: Center(
-              child: ScaleTransition(
-                scale: _scoreScaleAnimation,
-                child: ValueListenableBuilder<int>(
-                  valueListenable: widget.game.score,
-                  builder: (context, score, _) {
-                    return Text(
-                      '$score',
-                      style: AppTheme.scoreHud,
-                      textAlign: TextAlign.center,
-                    );
-                  },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ScaleTransition(
+                  scale: _scoreScaleAnimation,
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: widget.game.score,
+                    builder: (context, score, _) {
+                      return Text(
+                        '$score',
+                        style: AppTheme.scoreHud,
+                        textAlign: TextAlign.center,
+                      );
+                    },
+                  ),
                 ),
-              ),
+                IgnorePointer(
+                  child: ValueListenableBuilder<String?>(
+                    valueListenable: widget.game.hint,
+                    builder: (context, hintText, _) {
+                      return AnimatedOpacity(
+                        opacity: hintText != null ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 150),
+                        child: Text(
+                          hintText ?? '',
+                          style: AppTheme.h1.copyWith(
+                            fontSize: 22,
+                            color: Palette.yellow,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
 

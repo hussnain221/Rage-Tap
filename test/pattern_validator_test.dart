@@ -212,5 +212,59 @@ void main() {
         }
       }
     });
+
+    test('Overhead beam patterns (D1–D7) are valid at speeds 190, 230, 260, 300 and satisfy beam rules', () {
+      const beamPatterns = [
+        PatternLibrary.d1,
+        PatternLibrary.d2,
+        PatternLibrary.d3,
+        PatternLibrary.d4,
+        PatternLibrary.d5,
+        PatternLibrary.d6,
+        PatternLibrary.d7,
+      ];
+      const speeds = [190.0, 230.0, 260.0, 300.0];
+
+      for (final pattern in beamPatterns) {
+        for (final speed in speeds) {
+          if (speed < pattern.minSpeed) continue;
+          final violations = PatternValidator.validatePattern(
+            pattern,
+            minSpeed: speed,
+            maxSpeed: speed,
+          );
+          expect(
+            violations,
+            isEmpty,
+            reason: 'Beam pattern ${pattern.id} failed validation at speed $speed: ${violations.join("; ")}',
+          );
+        }
+      }
+    });
+
+    test('Deliberately unfair pattern (spikes@0, beam@0.60) is REJECTED', () {
+      const unfairSpikeBeam = Pattern(
+        id: 'UNFAIR_S1_BEAM',
+        minSpeed: 190,
+        tierStart: 60,
+        weight: 1,
+        items: [
+          PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
+          PatternItem(type: HazardType.beam, count: 1, dxSeconds: 0.60),
+        ],
+      );
+
+      final violations = PatternValidator.validatePattern(
+        unfairSpikeBeam,
+        minSpeed: 190,
+        maxSpeed: 190,
+      );
+      expect(violations, isNotEmpty);
+      expect(
+        violations.any((v) => v.contains('beam') && v.contains('arrival diff')),
+        isTrue,
+        reason: 'Expected arrival diff violation for unfair spike->beam pattern but got: $violations',
+      );
+    });
   });
 }

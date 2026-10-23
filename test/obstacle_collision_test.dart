@@ -123,4 +123,93 @@ void main() {
 
     game.disposeGame();
   });
+
+  test('Standing player under beam passes safely (clearance 16)', () {
+    final game = RageTapGame();
+    game.startRun();
+
+    // Beam horizontally overlapping with player hitbox [70, 98]
+    final beam = Obstacle.beam(x: 54); // hitbox left = 54 + 16 = 70, right = 82
+    game.world.add(beam);
+
+    game.player.y = Player.groundY; // 460, hitbox top = 466
+    game.player.grounded = true;
+
+    game.update(1 / 60);
+
+    // Standing clearance = 466 - 450 = 16 units; survives
+    expect(game.state.value, GameState.playing);
+    expect(game.player.hitbox.top, 466.0);
+    expect(beam.hitbox.bottom, 450.0);
+
+    game.disposeGame();
+  });
+
+  test('Player rising < 16 units (15 units) survives beam', () {
+    final game = RageTapGame();
+    game.startRun();
+
+    final beam = Obstacle.beam(x: 54);
+    game.world.add(beam);
+
+    // Rising 15 units: player.y = 445 -> hitbox top = 451 > beam.bottom (450) -> survives
+    game.player.y = 445.0;
+    game.player.vy = -30.0;
+    game.player.grounded = false;
+    game.update(1 / 60);
+    expect(game.state.value, GameState.playing);
+
+    game.disposeGame();
+  });
+
+  test('Player rising >= 16 units (17 units) collides with beam and sets DeathCause.beam', () {
+    final game = RageTapGame();
+    game.startRun();
+
+    final beam = Obstacle.beam(x: 54);
+    game.world.add(beam);
+
+    // Rising 17 units: player.y = 443 -> hitbox top = 449 < beam.bottom (450) -> collision
+    game.player.y = 443.0;
+    game.player.vy = -30.0;
+    game.player.grounded = false;
+    game.update(1 / 60);
+    expect(game.state.value, GameState.dying);
+    expect(game.lastDeathCause, DeathCause.beam);
+
+    game.disposeGame();
+  });
+
+  test('Buffered jump executed under beam collides once player rises >= 16 units', () {
+    final game = RageTapGame();
+    game.startRun();
+
+    // Place beam directly above player
+    final beam = Obstacle.beam(x: 54);
+    game.world.add(beam);
+
+    // Player just landed and buffers a jump
+    game.player.y = Player.groundY;
+    game.player.grounded = true;
+    game.player.jumpBufferTimer = C.jumpBufferSec;
+    // Execute jump
+    game.player.jump();
+    game.update(1 / 60);
+
+    // vy = -490, after dt=1/60, dy ~ -8.16, player.y ~ 451.84, rising ~8 units (<16)
+    // At this first sub-frame, player hasn't reached 16 units yet
+    // If still < 16 units, state is playing
+    if (game.player.hitbox.top > beam.hitbox.bottom) {
+      expect(game.state.value, GameState.playing);
+    }
+
+    // Step next frame: player rises further (dy > 16 units total, player.y <= 444)
+    game.update(1 / 60);
+
+    // Now player has risen >= 16 units while overlapping beam -> dies
+    expect(game.state.value, GameState.dying);
+    expect(game.lastDeathCause, DeathCause.beam);
+
+    game.disposeGame();
+  });
 }

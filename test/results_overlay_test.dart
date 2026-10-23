@@ -120,6 +120,25 @@ void main() {
       }
       expect(sawTallWallMsg, isTrue);
     });
+
+    test('Beam death cause selects beam message when chosen', () {
+      final fixedRand = math.Random(42);
+      bool sawBeamMsg = false;
+      for (int i = 0; i < 20; i++) {
+        final msg = ResultMessages.select(
+          isNewBest: false,
+          score: 20,
+          bestScore: 100,
+          deathCause: DeathCause.beam,
+          random: fixedRand,
+        );
+        if (ResultMessages.beamPool.contains(msg)) {
+          sawBeamMsg = true;
+          break;
+        }
+      }
+      expect(sawBeamMsg, isTrue);
+    });
   });
 
   group('ResultsOverlay widget tests', () {

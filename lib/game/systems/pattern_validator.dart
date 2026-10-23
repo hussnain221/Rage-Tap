@@ -64,6 +64,22 @@ class PatternValidator {
     }
   }
 
+  /// Hitbox inset left relative to component origin
+  static double hitboxInsetLeft(HazardType type) {
+    switch (type) {
+      case HazardType.spike:
+      case HazardType.barrier:
+      case HazardType.tallWall:
+        return 3.0;
+      case HazardType.charging:
+        return 4.0;
+      case HazardType.beam:
+        return 16.0;
+      case HazardType.pit:
+        return 0.0;
+    }
+  }
+
   /// Hitbox height of hazard
   static double hazardHitboxHeight(HazardType type) {
     switch (type) {
@@ -155,9 +171,11 @@ class PatternValidator {
     final effectiveMinSpeed = math.max(minSpeed, pattern.minSpeed);
 
     for (double speed = effectiveMinSpeed; speed <= maxSpeed + 0.001; speed += speedStep) {
-      // Fairness Invariant 1: timingWindow >= 0.12s
+      // Fairness Invariant 1: timingWindow >= 0.12s (for solid ground hazards and pits)
       for (int i = 0; i < pattern.items.length; i++) {
         final item = pattern.items[i];
+        if (item.type == HazardType.beam) continue;
+
         final sRel = relativeSpeed(item.type, speed);
         final window = timingWindow(
           type: item.type,
@@ -172,15 +190,67 @@ class PatternValidator {
         }
       }
 
-      // Fairness Invariant 2 & Dead Zone rule: gapTime >= 0.89s
+      // Fairness Invariant 2 & Beam / Pit gap rules
       for (int i = 0; i < pattern.items.length - 1; i++) {
         final a = pattern.items[i];
         final b = pattern.items[i + 1];
-        final gap = intraPatternGapTime(a: a, b: b, speed: speed);
-        if (gap < minGapTime - 0.0001) {
+
+        // Rule: Beam is never adjacent to a charging block or pit
+        if ((a.type == HazardType.beam && (b.type == HazardType.charging || b.type == HazardType.pit)) ||
+            (b.type == HazardType.beam && (a.type == HazardType.charging || a.type == HazardType.pit))) {
           violations.add(
-            'Pattern ${pattern.id} gap between item #$i and #${i + 1} is ${gap.toStringAsFixed(4)}s < ${minGapTime}s at speed ${speed.toStringAsFixed(1)}',
+            'Pattern ${pattern.id} has beam adjacent to charging block or pit between #$i and #${i + 1}',
           );
+          continue;
+        }
+
+        // Rule: Beam is never adjacent to another beam without a ground hazard between
+        if (a.type == HazardType.beam && b.type == HazardType.beam) {
+          violations.add(
+            'Pattern ${pattern.id} has consecutive beams without ground hazard between #$i and #${i + 1}',
+          );
+          continue;
+        }
+
+        if (a.type != HazardType.beam && b.type == HazardType.beam) {
+          // Ground hazard A -> beam B:
+          // B.arrive - A.arrive >= latestGround(H_A) + C.beamReactionSec
+          final bArriveMinusAArrive = (b.dxSeconds - a.dxSeconds) +
+              (hitboxInsetLeft(b.type) - hitboxInsetLeft(a.type)) / speed;
+          final required = latestGround(hazardHitboxHeight(a.type)) + C.beamReactionSec;
+          if (bArriveMinusAArrive < required - 0.0001) {
+            violations.add(
+              'Pattern ${pattern.id} pair #$i (${a.type.name}) -> #${i + 1} (beam) arrival diff ${bArriveMinusAArrive.toStringAsFixed(4)}s < required ${required.toStringAsFixed(4)}s at speed ${speed.toStringAsFixed(1)}',
+            );
+          }
+        } else if (a.type == HazardType.beam && b.type != HazardType.beam) {
+          // Beam B -> ground hazard C:
+          // (C.arrive - tStart(H_C)) - (B.arrive + (C.beamHitW + 28)/s - tStart(16)) >= C.beamReactionSec
+          // AND C.arrive - B.arrive >= C.afterBeamMinDxSec
+          final cArriveMinusBArrive = (b.dxSeconds - a.dxSeconds) +
+              (hitboxInsetLeft(b.type) - hitboxInsetLeft(a.type)) / speed;
+          if (cArriveMinusBArrive < C.afterBeamMinDxSec - 0.0001) {
+            violations.add(
+              'Pattern ${pattern.id} pair #$i (beam) -> #${i + 1} (${b.type.name}) arrival diff ${cArriveMinusBArrive.toStringAsFixed(4)}s < afterBeamMinDxSec ${C.afterBeamMinDxSec}s at speed ${speed.toStringAsFixed(1)}',
+            );
+          }
+
+          final takeoffC = cArriveMinusBArrive - tStart(hazardHitboxHeight(b.type));
+          final beamClear = (C.beamHitW + C.playerHitW) / speed - tStart(C.beamSafeHeight);
+          final reactionTime = takeoffC - beamClear;
+          if (reactionTime < C.beamReactionSec - 0.0001) {
+            violations.add(
+              'Pattern ${pattern.id} pair #$i (beam) -> #${i + 1} (${b.type.name}) reaction window ${reactionTime.toStringAsFixed(4)}s < beamReactionSec ${C.beamReactionSec}s at speed ${speed.toStringAsFixed(1)}',
+            );
+          }
+        } else {
+          // Both are ground solids (invariant 2)
+          final gap = intraPatternGapTime(a: a, b: b, speed: speed);
+          if (gap < minGapTime - 0.0001) {
+            violations.add(
+              'Pattern ${pattern.id} gap between item #$i and #${i + 1} is ${gap.toStringAsFixed(4)}s < ${minGapTime}s at speed ${speed.toStringAsFixed(1)}',
+            );
+          }
         }
       }
     }

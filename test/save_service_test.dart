@@ -91,21 +91,34 @@ void main() {
         'sound_enabled': false,
         'haptics_enabled': false,
         'first_run_done': true,
+        'beam_hint_shown': true,
       });
       final saveService = SaveService.instance;
       await saveService.init();
 
       expect(saveService.bestScore, 500);
       expect(saveService.totalRuns, 42);
+      expect(saveService.beamHintShown, isTrue);
 
       await saveService.resetProgress();
 
       expect(saveService.bestScore, 0);
       expect(saveService.totalRuns, 0);
-      // Preserved settings
+      // Preserved settings and hints
       expect(saveService.soundEnabled, isFalse);
       expect(saveService.hapticsEnabled, isFalse);
       expect(saveService.firstRunDone, isTrue);
+      expect(saveService.beamHintShown, isTrue);
+    });
+
+    test('beamHintShown defaults to false and persists when set', () async {
+      SharedPreferences.setMockInitialValues({});
+      final saveService = SaveService.instance;
+      await saveService.init();
+
+      expect(saveService.beamHintShown, isFalse);
+      await saveService.setBeamHintShown(true);
+      expect(saveService.beamHintShown, isTrue);
     });
   });
 }
