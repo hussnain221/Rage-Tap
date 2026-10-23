@@ -60,6 +60,7 @@ class Spawner {
 
   final Set<HazardType> _introducedTypes = {};
   final List<HazardType> _pendingIntroQueue = [];
+  final List<String> patternHistory = [];
 
   static double computeItemWidth(HazardType type, int count, [double pitWidth = 0.0]) {
     return geometryFor(type, count: count, pitWidth: pitWidth).visualSize.x;
@@ -134,11 +135,13 @@ class Spawner {
       available = [library.first];
     }
 
-    // Intro rule: identify newly unlocked hazard types
+    // Intro rule: identify newly unlocked hazard types that have an intro pattern
     final newlyUnlocked = <HazardType>{};
     for (final p in available) {
       for (final item in p.items) {
-        if (!_introducedTypes.contains(item.type) && !_pendingIntroQueue.contains(item.type)) {
+        if (!_introducedTypes.contains(item.type) &&
+            !_pendingIntroQueue.contains(item.type) &&
+            library.any((pat) => pat.introFor == item.type)) {
           newlyUnlocked.add(item.type);
         }
       }
@@ -162,12 +165,48 @@ class Spawner {
     }
 
     // Check if an intro pattern must be forced
-    while (_pendingIntroQueue.isNotEmpty) {
-      final nextType = _pendingIntroQueue.removeAt(0);
+    for (int i = 0; i < _pendingIntroQueue.length; i++) {
+      final nextType = _pendingIntroQueue[i];
+      // Do not introduce immediately if adjacent to incompatible hazard
+      if (_lastHazardType == HazardType.beam && (nextType == HazardType.charging || nextType == HazardType.pit)) {
+        continue;
+      }
+      if ((_lastHazardType == HazardType.charging || _lastHazardType == HazardType.pit) && nextType == HazardType.beam) {
+        continue;
+      }
+      _pendingIntroQueue.removeAt(i);
       _introducedTypes.add(nextType);
       final introPattern = library.where((p) => p.introFor == nextType).firstOrNull;
       if (introPattern != null) {
         return _recordChoice(introPattern, runTime);
+      }
+    }
+
+    // Exclude hazard types that are still waiting in intro queue
+    if (_pendingIntroQueue.isNotEmpty) {
+      final pendingSet = _pendingIntroQueue.toSet();
+      final withoutPending = available.where((p) => !p.items.any((i) => pendingSet.contains(i.type))).toList();
+      if (withoutPending.isNotEmpty) {
+        available = withoutPending;
+      }
+    }
+
+    // Beam is never adjacent to a charging block or a pit across pattern boundaries
+    if (_lastHazardType == HazardType.beam) {
+      final safePatterns = available.where((p) {
+        final firstType = p.items.first.type;
+        return firstType != HazardType.charging && firstType != HazardType.pit;
+      }).toList();
+      if (safePatterns.isNotEmpty) {
+        available = safePatterns;
+      }
+    } else if (_lastHazardType == HazardType.charging || _lastHazardType == HazardType.pit) {
+      final safePatterns = available.where((p) {
+        final firstType = p.items.first.type;
+        return firstType != HazardType.beam;
+      }).toList();
+      if (safePatterns.isNotEmpty) {
+        available = safePatterns;
       }
     }
 
@@ -215,6 +254,7 @@ class Spawner {
   }
 
   Pattern _recordChoice(Pattern chosen, double runTime) {
+    patternHistory.add(chosen.id);
     if (chosen.id == lastPatternId) {
       _consecutiveCount++;
     } else {
@@ -262,5 +302,6 @@ class Spawner {
     _pendingLeadSec = 0.0;
     _introducedTypes.clear();
     _pendingIntroQueue.clear();
+    patternHistory.clear();
   }
 }

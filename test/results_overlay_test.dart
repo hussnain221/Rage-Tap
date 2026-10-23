@@ -158,6 +158,25 @@ void main() {
       }
       expect(sawPitMsg, isTrue);
     });
+
+    test('Never returns the same message twice in a row across multiple selections', () {
+      final rand = math.Random(12345);
+      for (final cause in DeathCause.values) {
+        String? lastMsg;
+        for (int i = 0; i < 50; i++) {
+          final msg = ResultMessages.select(
+            isNewBest: false,
+            score: 25,
+            bestScore: 100,
+            deathCause: cause,
+            lastMessage: lastMsg,
+            random: rand,
+          );
+          expect(msg, isNot(equals(lastMsg)), reason: 'Cause $cause produced same message twice: $msg');
+          lastMsg = msg;
+        }
+      }
+    });
   });
 
   group('ResultsOverlay widget tests', () {

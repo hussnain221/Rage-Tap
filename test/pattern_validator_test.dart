@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/core/constants.dart';
 import 'package:rage_tap/game/systems/hazard_geometry.dart';
@@ -345,6 +347,48 @@ void main() {
         isTrue,
         reason: 'Expected timing window violation for long pit at speed 190 but got: $violations',
       );
+    });
+
+    test('Integration review table: all patterns have window >= 0.12s at minSpeed and at 300', () {
+      debugPrint('\n| Pattern | TierStart | MinSpeed | Weight | Window @ minSpeed | Window @ 300 |');
+      debugPrint('|---|---|---|---|---|---|');
+
+      for (final p in PatternLibrary.patterns) {
+        double? minWinAtMinSpeed;
+        double? minWinAt300;
+
+        for (final item in p.items) {
+          if (item.type != HazardType.beam) {
+            final winAtMin = PatternValidator.timingWindow(
+              type: item.type,
+              count: item.count,
+              sRel: p.minSpeed,
+              pitWidth: item.pitWidth,
+            );
+            final winAt300 = PatternValidator.timingWindow(
+              type: item.type,
+              count: item.count,
+              sRel: 300.0,
+              pitWidth: item.pitWidth,
+            );
+            minWinAtMinSpeed = minWinAtMinSpeed == null ? winAtMin : math.min(minWinAtMinSpeed, winAtMin);
+            minWinAt300 = minWinAt300 == null ? winAt300 : math.min(minWinAt300, winAt300);
+          }
+        }
+
+        final winMinStr = minWinAtMinSpeed != null ? minWinAtMinSpeed.toStringAsFixed(4) : 'N/A';
+        final win300Str = minWinAt300 != null ? minWinAt300.toStringAsFixed(4) : 'N/A';
+        debugPrint('| ${p.id.padRight(7)} | ${p.tierStart.toStringAsFixed(0).padRight(9)} | ${p.minSpeed.toStringAsFixed(0).padRight(8)} | ${p.weight.toString().padRight(6)} | ${winMinStr.padRight(17)} | ${win300Str.padRight(12)} |');
+
+        if (minWinAtMinSpeed != null) {
+          expect(minWinAtMinSpeed, greaterThanOrEqualTo(0.12 - 0.0001),
+              reason: 'Pattern ${p.id} has timing window $minWinAtMinSpeed < 0.12 at minSpeed ${p.minSpeed}');
+        }
+        if (minWinAt300 != null) {
+          expect(minWinAt300, greaterThanOrEqualTo(0.12 - 0.0001),
+              reason: 'Pattern ${p.id} has timing window $minWinAt300 < 0.12 at speed 300');
+        }
+      }
     });
   });
 }

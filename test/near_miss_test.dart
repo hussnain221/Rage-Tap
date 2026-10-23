@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rage_tap/core/constants.dart';
 import 'package:rage_tap/game/components/obstacle.dart';
+import 'package:rage_tap/game/components/player.dart';
 import 'package:rage_tap/game/components/popup_text.dart';
 import 'package:rage_tap/game/game_state.dart';
 import 'package:rage_tap/game/rage_tap_game.dart';
@@ -217,6 +218,66 @@ void main() {
       expect(wall.passed, isTrue);
       expect(game.nearMissCount, 1);
       expect(game.bonusScore, C.nearMissBonus);
+    });
+
+    test('Barrier and charging block award near-miss when clearing closely', () async {
+      final game = RageTapGame();
+      await game.onLoad();
+      game.startRun();
+      for (final obs in game.world.children.whereType<Obstacle>().toList()) {
+        obs.removeFromParent();
+      }
+
+      final barrier = Obstacle.barrier(x: 200);
+      await game.world.add(barrier);
+
+      // Barrier top is 447. Player bottom at 437 -> clearance 10 -> player.y = 397
+      game.player.y = 397;
+      game.player.vy = 0;
+      game.player.grounded = false;
+
+      barrier.x = 63;
+      game.update(1 / 60);
+      barrier.x = 30;
+      game.update(1 / 60);
+
+      expect(game.nearMissCount, 1);
+    });
+
+    test('Overhead beam and pit NEVER award near-miss', () async {
+      final game = RageTapGame();
+      await game.onLoad();
+      game.startRun();
+      for (final obs in game.world.children.whereType<Obstacle>().toList()) {
+        obs.removeFromParent();
+      }
+
+      // Beam passing while player stays low (standing, clearance 16)
+      final beam = Obstacle.beam(x: 63);
+      await game.world.add(beam);
+      game.player.y = Player.groundY;
+      game.player.grounded = true;
+
+      game.update(1 / 60);
+      beam.x = 30;
+      game.update(1 / 60);
+
+      expect(game.nearMissCount, 0);
+      expect(game.bonusScore, 0);
+
+      // Pit passing while player jumps over
+      final pit = Obstacle.pit(x: 100, width: C.pitShortW);
+      await game.world.add(pit);
+      game.player.y = 400;
+      game.player.grounded = false;
+
+      pit.x = 40;
+      game.update(1 / 60);
+      pit.x = -100;
+      game.update(1 / 60);
+
+      expect(game.nearMissCount, 0);
+      expect(game.bonusScore, 0);
     });
   });
 }
