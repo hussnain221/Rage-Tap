@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +19,7 @@ class _SfxChannel {
   final double volume;
   final int count;
   final List<AudioPlayer> _players = [];
+  final Set<AudioPlayer> _playing = {};
   int _cursor = 0;
 
   static final AudioContext _gameAudioContext = AudioContext(
@@ -33,6 +36,15 @@ class _SfxChannel {
     ),
   );
 
+  static bool get _isTest {
+    if (kIsWeb) return false;
+    try {
+      return Platform.environment.containsKey('FLUTTER_TEST');
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> init() async {
     if (_players.isNotEmpty) return;
     for (int i = 0; i < count; i++) {
@@ -40,6 +52,9 @@ class _SfxChannel {
         final player = AudioPlayer()..audioCache = FlameAudio.audioCache;
         // Disable FramePositionUpdater to eliminate per-frame platform channel queries
         player.positionUpdater = null;
+        if (!_isTest) {
+          await player.setAudioContext(_gameAudioContext);
+        }
         await player.setPlayerMode(PlayerMode.lowLatency);
         await player.setReleaseMode(ReleaseMode.stop);
         await player.setVolume(volume);
@@ -57,20 +72,35 @@ class _SfxChannel {
     if (_players.isEmpty) return;
     final player = _players[_cursor];
     _cursor = (_cursor + 1) % _players.length;
-    player.stop().then((_) => player.resume()).catchError((e) {
-      if (kDebugMode) {
-        debugPrint('AudioService _SfxChannel play error ($file): $e');
-      }
+
+    if (_playing.contains(player)) {
+      // Fallback if tapped faster than circular pool size
+      player.stop().then((_) {
+        _playing.add(player);
+        return player.resume();
+      }).catchError((_) {});
+    } else {
+      // Idle player ready: resume instantly on exact tap frame with zero stop overhead
+      _playing.add(player);
+      player.resume().catchError((_) {});
+    }
+
+    // Cleanly reset player state in the background after sound duration
+    Future.delayed(const Duration(milliseconds: 180), () {
+      _playing.remove(player);
+      player.stop().catchError((_) {});
     });
   }
 
   void stop() {
+    _playing.clear();
     for (final player in _players) {
       player.stop().catchError((_) {});
     }
   }
 
   Future<void> dispose() async {
+    _playing.clear();
     for (final player in _players) {
       try {
         await player.dispose();
@@ -82,7 +112,7 @@ class _SfxChannel {
 /// Audio service for managing and playing procedural SFX per spec §13.2.
 class AudioService {
   AudioService._() {
-    _jumpChannel = _SfxChannel(file: sfxJump, volume: 0.85, count: 3);
+    _jumpChannel = _SfxChannel(file: sfxJump, volume: 0.85, count: 4);
     _landChannel = _SfxChannel(file: sfxLand, volume: 0.40, count: 1);
     _hitChannel = _SfxChannel(file: sfxHit, volume: 0.90, count: 1);
     _nearMissChannel = _SfxChannel(file: sfxNearMiss, volume: 0.85, count: 2);
@@ -141,13 +171,13 @@ class AudioService {
     if (_initialized || !_hasBinding) return;
     _initialized = true;
 
-    try {
-      await AudioPlayer.global
-          .setAudioContext(_SfxChannel._gameAudioContext)
-          .timeout(const Duration(milliseconds: 100));
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('AudioService.init global audio context warning: $e');
+    if (!_SfxChannel._isTest) {
+      try {
+        await AudioPlayer.global.setAudioContext(_SfxChannel._gameAudioContext);
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('AudioService.init global audio context warning: $e');
+        }
       }
     }
 
