@@ -48,7 +48,24 @@ class C {
   static const double restMinStart = 1.30, restMaxStart = 1.90;
   static const double restMinEnd = 0.95, restMaxEnd = 1.25;
   static const double restRampSeconds = 45;
-  static const List<double> tierStarts = [0, 8, 16, 24, 36, 45, 60, 80];
+  static const double tier0Start = 0;
+  static const double tier1Start = 5;
+  static const double tier2Start = 10;
+  static const double tier3Start = 16;
+  static const double tier4Start = 22;
+  static const double tier5Start = 28;
+  static const double tier6Start = 36;
+  static const double tier7Start = 45;
+  static const List<double> tierStarts = [
+    tier0Start,
+    tier1Start,
+    tier2Start,
+    tier3Start,
+    tier4Start,
+    tier5Start,
+    tier6Start,
+    tier7Start,
+  ];
 
   // ---- New hazards (addendum) ----
   // Tall wall

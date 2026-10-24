@@ -23,18 +23,20 @@ void main() {
     expect(Difficulty.speed(100), C.maxSpeed);
 
     expect(Difficulty.tier(0), 1);
-    expect(Difficulty.tier(7.9), 1);
-    expect(Difficulty.tier(8.0), 2);
-    expect(Difficulty.tier(15.9), 2);
-    expect(Difficulty.tier(16.0), 3);
-    expect(Difficulty.tier(23.9), 3);
-    expect(Difficulty.tier(24.0), 4);
-    expect(Difficulty.tier(35.9), 4);
-    expect(Difficulty.tier(36.0), 5);
-    expect(Difficulty.tier(44.9), 5);
-    expect(Difficulty.tier(45.0), 6);
-    expect(Difficulty.tier(60.0), 7);
-    expect(Difficulty.tier(80.0), 8);
+    expect(Difficulty.tier(4.9), 1);
+    expect(Difficulty.tier(5.0), 2);
+    expect(Difficulty.tier(9.9), 2);
+    expect(Difficulty.tier(10.0), 3);
+    expect(Difficulty.tier(15.9), 3);
+    expect(Difficulty.tier(16.0), 4);
+    expect(Difficulty.tier(21.9), 4);
+    expect(Difficulty.tier(22.0), 5);
+    expect(Difficulty.tier(27.9), 5);
+    expect(Difficulty.tier(28.0), 6);
+    expect(Difficulty.tier(35.9), 6);
+    expect(Difficulty.tier(36.0), 7);
+    expect(Difficulty.tier(44.9), 7);
+    expect(Difficulty.tier(45.0), 8);
     expect(Difficulty.tier(100.0), 8);
   });
 

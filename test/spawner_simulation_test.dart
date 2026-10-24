@@ -275,7 +275,19 @@ void main() {
     }
   });
 
-  test('Master simulation starting at START_TIME=45s across seeds 1..100 satisfies all rules', () {
+  test('Master simulation starting at START_TIME=28s (Tall Wall) across seeds 1..100 satisfies all rules', () {
+    for (int seed = 1; seed <= 100; seed++) {
+      _runHeadlessSimulation(seed: seed, startTime: 28.0, totalSimulationSec: 60.0);
+    }
+  });
+
+  test('Master simulation starting at START_TIME=36s (Beam) across seeds 1..100 satisfies all rules', () {
+    for (int seed = 1; seed <= 100; seed++) {
+      _runHeadlessSimulation(seed: seed, startTime: 36.0, totalSimulationSec: 60.0);
+    }
+  });
+
+  test('Master simulation starting at START_TIME=45s (Pit) across seeds 1..100 satisfies all rules', () {
     for (int seed = 1; seed <= 100; seed++) {
       _runHeadlessSimulation(seed: seed, startTime: 45.0, totalSimulationSec: 60.0);
     }

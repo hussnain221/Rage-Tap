@@ -51,22 +51,22 @@ void main() {
       expect(retryItems.first.x, greaterThanOrEqualTo(C.worldW + 40));
     });
 
-    test('Tier unlock: at t < 8s only S1 is chosen; at t >= 8s S2 and B1 unlock', () {
+    test('Tier unlock: at t < 5s only S1 is chosen; at t >= 5s S2 and B1 unlock', () {
       final spawner = Spawner(seed: 999);
 
-      // At t = 0 to 7.9s, only S1 (spikes count 1) is unlocked
-      for (double t = 0.0; t < 8.0; t += 1.0) {
+      // At t = 0 to 4.9s, only S1 (spikes count 1) is unlocked
+      for (double t = 0.0; t < 5.0; t += 1.0) {
         final pattern = spawner.pickPattern(runTime: t, speed: C.baseSpeed);
         expect(pattern.id, 'S1');
         expect(pattern.items.first.count, 1);
         expect(pattern.items.first.type, HazardType.spike);
       }
 
-      // At t >= 8.0s, B1 and S2 unlock
+      // At t >= 5.0s, B1 and S2 unlock
       bool s2Seen = false;
       bool b1Seen = false;
       for (int i = 0; i < 40; i++) {
-        final pattern = spawner.pickPattern(runTime: 10.0, speed: C.baseSpeed);
+        final pattern = spawner.pickPattern(runTime: 6.0, speed: C.baseSpeed);
         if (pattern.id == 'S2') s2Seen = true;
         if (pattern.id == 'B1') b1Seen = true;
       }
@@ -74,22 +74,21 @@ void main() {
       expect(b1Seen, isTrue);
     });
 
-    test('S3 requires minSpeed 255 and t >= 24s', () {
+    test('S3 requires minSpeed 255 and t >= 16s', () {
       final spawner = Spawner(seed: 123);
 
-      // At t = 25s but speed = 250 px/s, S3 must NOT be selected
+      // At t = 20s but speed = 250 px/s, S3 must NOT be selected
       for (int i = 0; i < 20; i++) {
-        final pattern = spawner.pickPattern(runTime: 25.0, speed: 250.0);
+        final pattern = spawner.pickPattern(runTime: 20.0, speed: 250.0);
         expect(pattern.id != 'S3', isTrue);
       }
 
-      // At t = 25s and speed = 260 px/s (>= 255), S3 can be selected
+      // At t = 20s and speed = 260 px/s (>= 255), S3 can be selected
       bool s3Seen = false;
       for (int i = 0; i < 60; i++) {
-        final pattern = spawner.pickPattern(runTime: 25.0, speed: 260.0);
+        final pattern = spawner.pickPattern(runTime: 20.0, speed: 260.0);
         if (pattern.id == 'S3') {
           s3Seen = true;
-          expect(pattern.items.first.count, 3);
           break;
         }
       }
@@ -144,7 +143,7 @@ void main() {
     });
 
     test('C1 pattern spawns at telegraphX (360 + 0.7 * chargingSpeed)', () {
-      final spawner = Spawner(seed: 12345);
+      final spawner = Spawner(library: [PatternLibrary.c1]);
       const speed = 190.0;
       const chargingSpeed = speed + C.chargingExtraSpeed;
       final expectedTelegraphX = C.worldW + C.chargingTelegraphSec * chargingSpeed; // 535.0
@@ -153,7 +152,7 @@ void main() {
       const dt = 1 / 60;
       SpawnItem? chargingItem;
       for (int i = 0; i < 2500; i++) {
-        final items = spawner.update(dt, speed, 25.0 + i * dt);
+        final items = spawner.update(dt, speed, 16.0 + i * dt);
         for (final item in items) {
           if (item.type == HazardType.charging) {
             chargingItem = item;

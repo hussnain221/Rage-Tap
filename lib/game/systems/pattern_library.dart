@@ -7,18 +7,18 @@ class PatternLibrary {
   static const Pattern s1 = Pattern(
     id: 'S1',
     minSpeed: 190,
-    tierStart: 0,
+    tierStart: C.tier0Start,
     weight: 3,
     items: [
       PatternItem(type: ObstacleType.spike, count: 1, dxSeconds: 0),
     ],
   );
 
-  // Tier 2 (t >= 8s)
+  // Tier 2 (t >= 5s)
   static const Pattern s2 = Pattern(
     id: 'S2',
     minSpeed: 190,
-    tierStart: 8,
+    tierStart: C.tier1Start,
     weight: 3,
     items: [
       PatternItem(type: ObstacleType.spike, count: 2, dxSeconds: 0),
@@ -28,18 +28,18 @@ class PatternLibrary {
   static const Pattern b1 = Pattern(
     id: 'B1',
     minSpeed: 190,
-    tierStart: 8,
+    tierStart: C.tier1Start,
     weight: 3,
     items: [
       PatternItem(type: ObstacleType.barrier, count: 1, dxSeconds: 0),
     ],
   );
 
-  // Tier 3 (t >= 16s)
+  // Tier 3 (t >= 10s)
   static const Pattern s1b1 = Pattern(
     id: 'S1B1',
     minSpeed: 190,
-    tierStart: 16,
+    tierStart: C.tier2Start,
     weight: 2,
     items: [
       PatternItem(type: ObstacleType.spike, count: 1, dxSeconds: 0),
@@ -50,7 +50,7 @@ class PatternLibrary {
   static const Pattern b1s1 = Pattern(
     id: 'B1S1',
     minSpeed: 190,
-    tierStart: 16,
+    tierStart: C.tier2Start,
     weight: 2,
     items: [
       PatternItem(type: ObstacleType.barrier, count: 1, dxSeconds: 0),
@@ -61,7 +61,7 @@ class PatternLibrary {
   static const Pattern s2s1 = Pattern(
     id: 'S2S1',
     minSpeed: 190,
-    tierStart: 16,
+    tierStart: C.tier2Start,
     weight: 2,
     items: [
       PatternItem(type: ObstacleType.spike, count: 2, dxSeconds: 0),
@@ -69,11 +69,11 @@ class PatternLibrary {
     ],
   );
 
-  // Tier 4 (t >= 24s)
+  // Tier 4 (t >= 16s)
   static const Pattern b1b1 = Pattern(
     id: 'B1B1',
     minSpeed: 190,
-    tierStart: 24,
+    tierStart: C.tier3Start,
     weight: 2,
     items: [
       PatternItem(type: ObstacleType.barrier, count: 1, dxSeconds: 0),
@@ -84,7 +84,7 @@ class PatternLibrary {
   static const Pattern s3 = Pattern(
     id: 'S3',
     minSpeed: 255,
-    tierStart: 24,
+    tierStart: C.tier3Start,
     weight: 2,
     items: [
       PatternItem(type: ObstacleType.spike, count: 3, dxSeconds: 0),
@@ -94,7 +94,7 @@ class PatternLibrary {
   static const Pattern c1 = Pattern(
     id: 'C1',
     minSpeed: 190,
-    tierStart: 24,
+    tierStart: C.tier3Start,
     weight: 2,
     minLeadSeconds: 1.8,
     items: [
@@ -102,11 +102,11 @@ class PatternLibrary {
     ],
   );
 
-  // Tier 5 (t >= 36s)
+  // Tier 5 (t >= 22s)
   static const Pattern s1b1s1 = Pattern(
     id: 'S1B1S1',
     minSpeed: 190,
-    tierStart: 36,
+    tierStart: C.tier4Start,
     weight: 1,
     items: [
       PatternItem(type: ObstacleType.spike, count: 1, dxSeconds: 0),
@@ -118,7 +118,7 @@ class PatternLibrary {
   static const Pattern b1s2b1 = Pattern(
     id: 'B1S2B1',
     minSpeed: 190,
-    tierStart: 36,
+    tierStart: C.tier4Start,
     weight: 1,
     items: [
       PatternItem(type: ObstacleType.barrier, count: 1, dxSeconds: 0),
@@ -127,11 +127,11 @@ class PatternLibrary {
     ],
   );
 
-  // Tier 6 (t >= 45s) - Tall Wall (minSpeed 210)
+  // Tier 6 (t >= 28s) - Tall Wall (minSpeed 210)
   static const Pattern w1 = Pattern(
     id: 'W1',
     minSpeed: 210,
-    tierStart: 45,
+    tierStart: C.tier5Start,
     weight: 3,
     introFor: HazardType.tallWall,
     items: [
@@ -142,7 +142,7 @@ class PatternLibrary {
   static const Pattern w1s1 = Pattern(
     id: 'W1S1',
     minSpeed: 210,
-    tierStart: 45,
+    tierStart: C.tier5Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0),
@@ -153,7 +153,7 @@ class PatternLibrary {
   static const Pattern b1w1 = Pattern(
     id: 'B1W1',
     minSpeed: 210,
-    tierStart: 45,
+    tierStart: C.tier5Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 0),
@@ -164,7 +164,7 @@ class PatternLibrary {
   static const Pattern s2w1 = Pattern(
     id: 'S2W1',
     minSpeed: 210,
-    tierStart: 45,
+    tierStart: C.tier5Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.spike, count: 2, dxSeconds: 0),
@@ -175,7 +175,7 @@ class PatternLibrary {
   static const Pattern w1w1 = Pattern(
     id: 'W1W1',
     minSpeed: 210,
-    tierStart: 45,
+    tierStart: C.tier5Start,
     weight: 1,
     items: [
       PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0),
@@ -187,7 +187,7 @@ class PatternLibrary {
   static const Pattern r3 = Pattern(
     id: 'R3',
     minSpeed: 285,
-    tierStart: 45,
+    tierStart: C.tier5Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
@@ -199,7 +199,7 @@ class PatternLibrary {
   static const Pattern r3s = Pattern(
     id: 'R3S',
     minSpeed: 285,
-    tierStart: 45,
+    tierStart: C.tier5Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
@@ -211,7 +211,7 @@ class PatternLibrary {
   static const Pattern r4 = Pattern(
     id: 'R4',
     minSpeed: 285,
-    tierStart: 45,
+    tierStart: C.tier5Start,
     weight: 1,
     items: [
       PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 0),
@@ -221,11 +221,11 @@ class PatternLibrary {
     ],
   );
 
-  // Tier 8 (t >= 80s) - Rhythm Pack (minSpeed 285)
+  // Tier 8 (t >= 45s) - Rhythm Pack (minSpeed 285)
   static const Pattern r5 = Pattern(
     id: 'R5',
     minSpeed: 285,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 1,
     items: [
       PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
@@ -236,11 +236,11 @@ class PatternLibrary {
     ],
   );
 
-  // Tier 7 (t >= 60s) - Overhead Beam (minSpeed 190)
+  // Tier 7 (t >= 36s) - Overhead Beam (minSpeed 190)
   static const Pattern d1 = Pattern(
     id: 'D1',
     minSpeed: 190,
-    tierStart: 60,
+    tierStart: C.tier6Start,
     weight: 3,
     introFor: HazardType.beam,
     items: [
@@ -251,7 +251,7 @@ class PatternLibrary {
   static const Pattern d2 = Pattern(
     id: 'D2',
     minSpeed: 190,
-    tierStart: 60,
+    tierStart: C.tier6Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
@@ -262,7 +262,7 @@ class PatternLibrary {
   static const Pattern d3 = Pattern(
     id: 'D3',
     minSpeed: 190,
-    tierStart: 60,
+    tierStart: C.tier6Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.beam, count: 1, dxSeconds: 0),
@@ -273,7 +273,7 @@ class PatternLibrary {
   static const Pattern d4 = Pattern(
     id: 'D4',
     minSpeed: 190,
-    tierStart: 60,
+    tierStart: C.tier6Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 0),
@@ -284,7 +284,7 @@ class PatternLibrary {
   static const Pattern d5 = Pattern(
     id: 'D5',
     minSpeed: 190,
-    tierStart: 60,
+    tierStart: C.tier6Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.beam, count: 1, dxSeconds: 0),
@@ -295,7 +295,7 @@ class PatternLibrary {
   static const Pattern d6 = Pattern(
     id: 'D6',
     minSpeed: 190,
-    tierStart: 60,
+    tierStart: C.tier6Start,
     weight: 1,
     items: [
       PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
@@ -307,7 +307,7 @@ class PatternLibrary {
   static const Pattern d7 = Pattern(
     id: 'D7',
     minSpeed: 210,
-    tierStart: 60,
+    tierStart: C.tier6Start,
     weight: 1,
     items: [
       PatternItem(type: HazardType.tallWall, count: 1, dxSeconds: 0),
@@ -316,11 +316,11 @@ class PatternLibrary {
     ],
   );
 
-  // Tier 8 (t >= 80s) - Pit (gap in the ground)
+  // Tier 8 (t >= 45s) - Pit (gap in the ground)
   static const Pattern pit1 = Pattern(
     id: 'PIT1',
     minSpeed: 190,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 3,
     introFor: HazardType.pit,
     items: [
@@ -331,7 +331,7 @@ class PatternLibrary {
   static const Pattern pit2 = Pattern(
     id: 'PIT2',
     minSpeed: 200,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 3,
     items: [
       PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitMediumW),
@@ -341,7 +341,7 @@ class PatternLibrary {
   static const Pattern pit3 = Pattern(
     id: 'PIT3',
     minSpeed: 255,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitLongW),
@@ -351,7 +351,7 @@ class PatternLibrary {
   static const Pattern ps1 = Pattern(
     id: 'PS1',
     minSpeed: 190,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),
@@ -362,7 +362,7 @@ class PatternLibrary {
   static const Pattern sp1 = Pattern(
     id: 'SP1',
     minSpeed: 190,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitShortW),
@@ -373,7 +373,7 @@ class PatternLibrary {
   static const Pattern pm1 = Pattern(
     id: 'PM1',
     minSpeed: 200,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 2,
     items: [
       PatternItem(type: HazardType.barrier, count: 1, dxSeconds: 0),
@@ -384,7 +384,7 @@ class PatternLibrary {
   static const Pattern mb1 = Pattern(
     id: 'MB1',
     minSpeed: 200,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 1,
     items: [
       PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitMediumW),
@@ -395,7 +395,7 @@ class PatternLibrary {
   static const Pattern pp = Pattern(
     id: 'PP',
     minSpeed: 190,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 1,
     items: [
       PatternItem(type: HazardType.pit, count: 1, dxSeconds: 0, pitWidth: C.pitShortW),
@@ -406,7 +406,7 @@ class PatternLibrary {
   static const Pattern g1 = Pattern(
     id: 'G1',
     minSpeed: 210,
-    tierStart: 80,
+    tierStart: C.tier7Start,
     weight: 1,
     items: [
       PatternItem(type: HazardType.spike, count: 1, dxSeconds: 0),

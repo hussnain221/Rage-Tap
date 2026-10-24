@@ -21,9 +21,9 @@ void main() {
       expect(gap.max, 1.90);
     });
 
-    test('t = 10s: speed 220, tier 2, rest gap linear lerp values', () {
+    test('t = 10s: speed 220, tier 3, rest gap linear lerp values', () {
       expect(Difficulty.speed(10.0), 220.0);
-      expect(Difficulty.tier(10.0), 2);
+      expect(Difficulty.tier(10.0), 3);
       final gap = Difficulty.restGapRange(10.0);
       // min = 1.30 + (0.95 - 1.30) * (10 / 45) = 1.2222...
       // max = 1.90 + (1.25 - 1.90) * (10 / 45) = 1.7555...
@@ -31,10 +31,10 @@ void main() {
       expect(gap.max, closeTo(1.7556, 0.0001));
     });
 
-    test('t = 36.7s: speed capped at 300, tier 5, rest gap linear lerp values', () {
+    test('t = 36.7s: speed capped at 300, tier 7, rest gap linear lerp values', () {
       // 190 + 3.0 * 36.7 = 300.1 -> clamped to 300.0
       expect(Difficulty.speed(36.7), 300.0);
-      expect(Difficulty.tier(36.7), 5);
+      expect(Difficulty.tier(36.7), 7);
       final gap = Difficulty.restGapRange(36.7);
       // min = 1.30 + (0.95 - 1.30) * (36.7 / 45) = 1.014555...
       // max = 1.90 + (1.25 - 1.90) * (36.7 / 45) = 1.369888...
@@ -42,9 +42,9 @@ void main() {
       expect(gap.max, closeTo(1.3699, 0.0001));
     });
 
-    test('t = 45s: speed 300, tier 6, rest gap reaches floor [0.95, 1.25]', () {
+    test('t = 45s: speed 300, tier 8, rest gap reaches floor [0.95, 1.25]', () {
       expect(Difficulty.speed(45.0), 300.0);
-      expect(Difficulty.tier(45.0), 6);
+      expect(Difficulty.tier(45.0), 8);
       final gap = Difficulty.restGapRange(45.0);
       expect(gap.min, 0.95);
       expect(gap.max, 1.25);
@@ -58,22 +58,22 @@ void main() {
       expect(gap.max, 1.25);
     });
 
-    test('Tier boundaries match addendum H0: t=7.9->1, 8->2, 16->3, 24->4, 36->5, 45->6, 60->7, 80->8', () {
+    test('Tier boundaries match tuned H6: t=4.9->1, 5->2, 10->3, 16->4, 22->5, 28->6, 36->7, 45->8', () {
       expect(Difficulty.tier(0.0), 1);
-      expect(Difficulty.tier(7.9), 1);
-      expect(Difficulty.tier(8.0), 2);
-      expect(Difficulty.tier(15.9), 2);
-      expect(Difficulty.tier(16.0), 3);
-      expect(Difficulty.tier(23.9), 3);
-      expect(Difficulty.tier(24.0), 4);
-      expect(Difficulty.tier(35.9), 4);
-      expect(Difficulty.tier(36.0), 5);
-      expect(Difficulty.tier(44.9), 5);
-      expect(Difficulty.tier(45.0), 6);
-      expect(Difficulty.tier(59.9), 6);
-      expect(Difficulty.tier(60.0), 7);
-      expect(Difficulty.tier(79.9), 7);
-      expect(Difficulty.tier(80.0), 8);
+      expect(Difficulty.tier(4.9), 1);
+      expect(Difficulty.tier(5.0), 2);
+      expect(Difficulty.tier(9.9), 2);
+      expect(Difficulty.tier(10.0), 3);
+      expect(Difficulty.tier(15.9), 3);
+      expect(Difficulty.tier(16.0), 4);
+      expect(Difficulty.tier(21.9), 4);
+      expect(Difficulty.tier(22.0), 5);
+      expect(Difficulty.tier(27.9), 5);
+      expect(Difficulty.tier(28.0), 6);
+      expect(Difficulty.tier(35.9), 6);
+      expect(Difficulty.tier(36.0), 7);
+      expect(Difficulty.tier(44.9), 7);
+      expect(Difficulty.tier(45.0), 8);
       expect(Difficulty.tier(120.0), 8);
     });
   });
