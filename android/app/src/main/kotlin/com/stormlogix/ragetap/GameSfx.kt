@@ -1,4 +1,4 @@
-package com.example.rage_tap
+package com.stormlogix.ragetap
 
 import android.content.Context
 import android.media.AudioAttributes

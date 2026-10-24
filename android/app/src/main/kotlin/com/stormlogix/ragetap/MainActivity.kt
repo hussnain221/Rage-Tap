@@ -1,4 +1,4 @@
-package com.example.rage_tap
+package com.stormlogix.ragetap
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -9,4 +9,3 @@ class MainActivity : FlutterActivity() {
         GameSfx.register(flutterEngine.dartExecutor.binaryMessenger, this)
     }
 }
-
