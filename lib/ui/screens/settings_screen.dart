@@ -12,9 +12,11 @@ class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
     this.saveService,
+    this.privacyPolicyUrl = C.privacyPolicyUrl,
   });
 
   final SaveService? saveService;
+  final String privacyPolicyUrl;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -45,7 +47,7 @@ The app is not directed to children under 13.
 Changes:
 If a future version adds advertising or other features that process data, this policy will be updated before release and the app's Data safety information will be updated accordingly.
 
-Contact: support@ragetap.game
+Contact: support@stormlogix.com
 ''';
 
   @override
@@ -67,8 +69,8 @@ Contact: support@ragetap.game
   }
 
   Future<void> _openPrivacyPolicy() async {
-    if (C.privacyPolicyUrl.isNotEmpty) {
-      final uri = Uri.tryParse(C.privacyPolicyUrl);
+    if (widget.privacyPolicyUrl.isNotEmpty) {
+      final uri = Uri.tryParse(widget.privacyPolicyUrl);
       if (uri != null) {
         try {
           final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);

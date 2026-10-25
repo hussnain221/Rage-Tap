@@ -102,7 +102,8 @@ class C {
   static const int maxScore = 9999999;
 
   // Metadata & Links
-  static const String privacyPolicyUrl = '';
-  static const String publisherName = 'Rage Tap';
+  static const String privacyPolicyUrl =
+      'https://sites.google.com/view/stormlogix-privacy-policy/ragetap';
+  static const String publisherName = 'StormLogix';
   static const String appVersion = 'v1.0.0';
 }

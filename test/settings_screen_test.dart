@@ -79,7 +79,7 @@ void main() {
   testWidgets('SettingsScreen opens Privacy Policy dialog when URL is unset', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: SettingsScreen(),
+        home: SettingsScreen(privacyPolicyUrl: ''),
       ),
     );
 
