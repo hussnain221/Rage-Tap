@@ -40,4 +40,4 @@ If a future update introduces features that interact with external services (suc
 ### 7. Contact Us
 If you have any questions or feedback regarding this Privacy Policy, please contact us:
 - **Publisher:** StormLogix
-- **Email:** support@stormlogix.com
+- **Email:** stormlogix1@gmail.com

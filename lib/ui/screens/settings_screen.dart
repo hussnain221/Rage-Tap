@@ -47,7 +47,7 @@ The app is not directed to children under 13.
 Changes:
 If a future version adds advertising or other features that process data, this policy will be updated before release and the app's Data safety information will be updated accordingly.
 
-Contact: support@stormlogix.com
+Contact: stormlogix1@gmail.com
 ''';
 
   @override
