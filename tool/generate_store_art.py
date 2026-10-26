@@ -44,7 +44,7 @@ def get_font(size: int, bold: bool = True):
 
 
 def create_radial_gradient(width: int, height: int, c_center, c_outer, cx_ratio=0.5, cy_ratio=0.5):
-    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    img = Image.new("RGBA", (width, height), (c_outer[0], c_outer[1], c_outer[2], 255))
     draw = ImageDraw.Draw(img)
     cx = width * cx_ratio
     cy = height * cy_ratio
@@ -180,9 +180,9 @@ def render_icon_512() -> Image.Image:
     """Renders 512x512 Play Store app icon using 4x supersampling (2048x2048)."""
     scale = 4
     dim = 512 * scale
-    canvas = Image.new("RGBA", (dim, dim), (0, 0, 0, 0))
+    canvas = Image.new("RGBA", (dim, dim), (BG_DARK[0], BG_DARK[1], BG_DARK[2], 255))
 
-    # 1. Background gradient: Deep space purple to dark navy
+    # 1. Background gradient: Deep space purple to dark navy, full bleed
     bg = create_radial_gradient(dim, dim, (32, 22, 78), BG_DARK, cx_ratio=0.5, cy_ratio=0.45)
     canvas.paste(bg, (0, 0))
 
@@ -199,7 +199,7 @@ def render_icon_512() -> Image.Image:
     canvas.alpha_composite(ambient_glow)
 
     # 3. Zap character
-    zap_size = int(dim * 0.58)
+    zap_size = int(dim * 0.60)
     zap_x = (dim - zap_size) // 2
     zap_y = (dim - zap_size) // 2 + int(6 * scale)
 
@@ -218,17 +218,7 @@ def render_icon_512() -> Image.Image:
     zap_sprite = render_zap_sprite(zap_size)
     canvas.alpha_composite(zap_sprite, (zap_x, zap_y))
 
-    # 4. Sleek modern neon edge border (Google squircle style)
-    draw = ImageDraw.Draw(canvas)
-    border_r = int(dim * 0.22)
-    draw.rounded_rectangle(
-        [12 * scale, 12 * scale, dim - 12 * scale, dim - 12 * scale],
-        radius=border_r,
-        outline=(34, 227, 255, 45),
-        width=int(2.5 * scale)
-    )
-
-    # Downsample cleanly with Lanczos
+    # Downsample cleanly with Lanczos to 512x512
     return canvas.resize((512, 512), Image.Resampling.LANCZOS)
 
 
