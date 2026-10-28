@@ -101,6 +101,18 @@ class C {
   // Persistence
   static const int maxScore = 9999999;
 
+  // Rage meter (§20.1)
+  static const bool rageEnabled = true;
+  static const double rageNearMissIncrement = 25.0;
+  static const double rageDrainDelaySec = 3.0;
+  static const double rageDrainPerSec = 8.0;
+  static const double rageDurationSec = 5.0;
+  static const double rageSpeedMultiplier = 1.15;
+  static const int rageScoreMultiplier = 2;
+  static const double rageMeterW = 160.0;
+  static const double rageMeterH = 8.0;
+  static const double rageOverlayAlpha = 0.15;
+
   // Metadata & Links
   static const String privacyPolicyUrl =
       'https://sites.google.com/view/stormlogix-privacy-policy/ragetap';

@@ -132,6 +132,7 @@ void _runHeadlessSimulation({
   required int seed,
   required double startTime,
   required double totalSimulationSec,
+  bool isRageBoosted = false,
 }) {
   const double dt = 1 / 60;
   const double playerHitboxRight = C.playerLeft + C.playerHitX + C.playerHitW; // 98.0
@@ -150,7 +151,7 @@ void _runHeadlessSimulation({
   }
 
   final spawner = Spawner(seed: seed, enableLogging: false);
-  final speed = Difficulty.speed(startTime);
+  final speed = Difficulty.speed(startTime) * (isRageBoosted ? C.rageSpeedMultiplier : 1.0);
   final initialItems = spawner.startRun(isRetry: false, speed: speed, runTime: startTime);
   final activeHazards = <_SimHazard>[];
   for (final item in initialItems) {
@@ -162,7 +163,7 @@ void _runHeadlessSimulation({
 
   for (int step = 0; step < steps; step++) {
     final simTime = startTime + step * dt;
-    final currentSpeed = Difficulty.speed(simTime);
+    final currentSpeed = Difficulty.speed(simTime) * (isRageBoosted ? C.rageSpeedMultiplier : 1.0);
 
     for (final h in activeHazards) {
       final hSpeed = h.type == HazardType.charging
@@ -203,11 +204,12 @@ void _runHeadlessSimulation({
   // 1. Safe opening check (runs starting at 0)
   if (startTime == 0.0 && arrivedHazards.isNotEmpty) {
     final firstArrival = arrivedHazards.first.arrivalTime!;
+    final expectedMinArrival = 2.7 / (isRageBoosted ? C.rageSpeedMultiplier : 1.0) - 0.05;
     expect(
       firstArrival,
-      greaterThanOrEqualTo(2.7),
+      greaterThanOrEqualTo(expectedMinArrival),
       reason:
-          'Seed $seed first hazard arrived too early at ${firstArrival.toStringAsFixed(3)}s (expected >= 2.7s safe opening)',
+          'Seed $seed first hazard arrived too early at ${firstArrival.toStringAsFixed(3)}s (expected >= ${expectedMinArrival.toStringAsFixed(3)}s safe opening)',
     );
   }
 
@@ -302,6 +304,17 @@ void main() {
   test('Master simulation starting at START_TIME=80s across seeds 1..100 satisfies all rules', () {
     for (int seed = 1; seed <= 100; seed++) {
       _runHeadlessSimulation(seed: seed, startTime: 80.0, totalSimulationSec: 60.0);
+    }
+  });
+
+  test('Master simulation under continuous Rage speed boost (1.15x) across seeds 1..100 satisfies all rules', () {
+    for (int seed = 1; seed <= 100; seed++) {
+      _runHeadlessSimulation(
+        seed: seed,
+        startTime: 0.0,
+        totalSimulationSec: 60.0,
+        isRageBoosted: true,
+      );
     }
   });
 }

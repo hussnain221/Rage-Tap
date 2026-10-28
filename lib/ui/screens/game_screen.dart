@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../audio/audio_service.dart';
+import '../../core/constants.dart';
 import '../../core/palette.dart';
 import '../../game/game_state.dart';
 import '../../game/rage_tap_game.dart';
@@ -165,6 +166,34 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
+
+            // Rage Mode screen edge tint (§20.1)
+            if (C.rageEnabled)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _game.isRageActive,
+                    builder: (context, isRage, _) {
+                      return AnimatedOpacity(
+                        opacity: isRage ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 150),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              radius: 1.1,
+                              colors: [
+                                Colors.transparent,
+                                Palette.magenta.withValues(alpha: C.rageOverlayAlpha),
+                              ],
+                              stops: const [0.75, 1.0],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
 
             // Above it: SafeArea Stack for UI and HUD
             SafeArea(

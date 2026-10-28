@@ -53,7 +53,23 @@ class ZapPainter {
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
-  /// Pure painting function that renders Zap per spec §7.1
+  // Rage Mode paints (§20.1)
+  static final Paint _rageGlowPaint = Paint()
+    ..color = const Color(0xFFFF2E4C).withValues(alpha: 0.7)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+
+  static final Paint _rageFlameOutlinePaint = Paint()
+    ..color = Palette.orange
+    ..strokeWidth = 2.5
+    ..style = PaintingStyle.stroke;
+
+  static final Paint _rageBrowPaint = Paint()
+    ..color = const Color(0xFFFF2E4C)
+    ..strokeWidth = 3.5
+    ..strokeCap = StrokeCap.round
+    ..style = PaintingStyle.stroke;
+
+  /// Pure painting function that renders Zap per spec §7.1 and §20.1
   static void paintZap(
     Canvas canvas, {
     Offset origin = Offset.zero,
@@ -62,6 +78,7 @@ class ZapPainter {
     double t = 0.0,
     double scaleX = 1.0,
     double scaleY = 1.0,
+    bool isRage = false,
   }) {
     canvas.save();
     canvas.translate(origin.dx, origin.dy);
@@ -105,18 +122,22 @@ class ZapPainter {
       canvas.drawRRect(rightFootRect, _footPaint);
     }
 
-    // 2. Glow (cyan @ 50% alpha, blur 8) - omitted for dead expression
+    // 2. Glow (cyan @ 50% alpha, blur 8, or red/flame in Rage Mode) - omitted for dead expression
     final bodyRRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, 40.0 * s, 40.0 * s),
       Radius.circular(10.0 * s),
     );
     if (expression != ZapExpression.dead) {
-      canvas.drawRRect(bodyRRect, _glowPaint);
+      canvas.drawRRect(bodyRRect, isRage ? _rageGlowPaint : _glowPaint);
     }
 
     // 3. Body: rounded rect 40x40, corner radius 10
     final bodyPaint = expression == ZapExpression.dead ? _deadBodyPaint : _bodyPaint;
     canvas.drawRRect(bodyRRect, bodyPaint);
+
+    if (isRage && expression != ZapExpression.dead) {
+      canvas.drawRRect(bodyRRect.inflate(1.5 * s), _rageFlameOutlinePaint);
+    }
 
     // 4. Darker bottom edge strip (4 units) in cyanDark
     canvas.save();
@@ -230,17 +251,18 @@ class ZapPainter {
       }
     }
 
-    // 7. Brows: 3-unit thick round-cap lines angled inward (determined/angry)
+    // 7. Brows: 3-unit thick round-cap lines angled inward (determined/angry), glowing red in Rage
     if (expression != ZapExpression.dead) {
+      final browPaint = isRage ? _rageBrowPaint : _browPaint;
       canvas.drawLine(
         Offset(7.0 * s, 11.0 * s),
         Offset(17.0 * s, 14.0 * s),
-        _browPaint,
+        browPaint,
       );
       canvas.drawLine(
         Offset(33.0 * s, 11.0 * s),
         Offset(23.0 * s, 14.0 * s),
-        _browPaint,
+        browPaint,
       );
     }
 

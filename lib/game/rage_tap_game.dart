@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
@@ -48,10 +50,13 @@ class RageTapGame extends FlameGame {
   final ValueNotifier<int> resumeCountdown = ValueNotifier<int>(0);
   final ValueNotifier<int> scoreBonusTrigger = ValueNotifier<int>(0);
   final ValueNotifier<bool> showHitboxes = ValueNotifier<bool>(false);
+  final ValueNotifier<double> rageMeter = ValueNotifier<double>(0.0);
+  final ValueNotifier<bool> isRageActive = ValueNotifier<bool>(false);
 
   final Player player = Player();
   final ParticleEffects particles = ParticleEffects();
   final List<Obstacle> _activeObstacles = [];
+  PopupText? _activePopupText;
   FpsComponent? _fpsComponent;
 
   double runTime = 0.0;
@@ -70,6 +75,8 @@ class RageTapGame extends FlameGame {
   bool _hasDied = false;
   double _dyingTimer = 0.0;
   double _resumeStepTimer = 0.0;
+  double _rageModeTimer = 0.0;
+  double _timeSinceLastNearMiss = 0.0;
 
   double get currentFps => _fpsComponent?.fps ?? 0.0;
   int get seed => spawner.seed;
@@ -96,6 +103,7 @@ class RageTapGame extends FlameGame {
 
   void _clearObstacles() {
     _activeObstacles.clear();
+    _activePopupText = null;
     hint.value = null;
     _hintTimer = null;
     // Collect removals first to avoid modifying the collection mid-iteration
@@ -136,9 +144,30 @@ class RageTapGame extends FlameGame {
     if (state.value == GameState.resuming) {
       _updateResumeCountdown(clampedDt);
     } else if (state.value == GameState.playing) {
+      // Rage Meter and Rage Mode updates (§20.1)
+      if (C.rageEnabled) {
+        if (isRageActive.value) {
+          _rageModeTimer -= clampedDt;
+          rageMeter.value = math.max(0.0, (_rageModeTimer / C.rageDurationSec) * 100.0);
+          if (_rageModeTimer <= 0.0) {
+            _endRageMode();
+          }
+        } else {
+          _timeSinceLastNearMiss += clampedDt;
+          if (_timeSinceLastNearMiss >= C.rageDrainDelaySec && rageMeter.value > 0.0) {
+            final drained = rageMeter.value - (C.rageDrainPerSec * clampedDt);
+            rageMeter.value = math.max(0.0, drained);
+          }
+        }
+      }
+
       runTime += clampedDt;
-      currentSpeed = Difficulty.speed(runTime);
-      distance += currentSpeed * clampedDt;
+      final baseSpeed = Difficulty.speed(runTime);
+      currentSpeed = (C.rageEnabled && isRageActive.value)
+          ? baseSpeed * C.rageSpeedMultiplier
+          : baseSpeed;
+      final scoreMult = (C.rageEnabled && isRageActive.value) ? C.rageScoreMultiplier : 1;
+      distance += currentSpeed * clampedDt * scoreMult;
       final currentScore = Scoring.pointsFromDistance(distance) + bonusScore;
       score.value = currentScore;
       if (currentScore > bestScore.value) {
@@ -254,6 +283,11 @@ class RageTapGame extends FlameGame {
       _updateDying(clampedDt);
     }
 
+    if (_activePopupText != null && _activePopupText!.isExpired) {
+      _activePopupText!.removeFromParent();
+      _activePopupText = null;
+    }
+
     super.update(clampedDt);
   }
 
@@ -270,9 +304,48 @@ class RageTapGame extends FlameGame {
     }
     scoreBonusTrigger.value++;
     player.triggerScared();
-    world.add(PopupText(
+    _activePopupText?.removeFromParent();
+    final popup = PopupText(
       initialPosition: Vector2(player.x + C.playerSize / 2, player.y - 12),
-    ));
+    );
+    _activePopupText = popup;
+    world.add(popup);
+
+    if (C.rageEnabled) {
+      _timeSinceLastNearMiss = 0.0;
+      if (!isRageActive.value) {
+        final nextVal = (rageMeter.value + C.rageNearMissIncrement).clamp(0.0, 100.0);
+        rageMeter.value = nextVal;
+        if (nextVal >= 100.0) {
+          _activateRageMode();
+        }
+      }
+    }
+  }
+
+  void _activateRageMode() {
+    isRageActive.value = true;
+    player.isRageMode = true;
+    _rageModeTimer = C.rageDurationSec;
+    rageMeter.value = 100.0;
+  }
+
+  void _endRageMode() {
+    isRageActive.value = false;
+    player.isRageMode = false;
+    rageMeter.value = 0.0;
+    _rageModeTimer = 0.0;
+    _timeSinceLastNearMiss = 0.0;
+  }
+
+  @visibleForTesting
+  void triggerNearMissForTesting() {
+    _triggerNearMiss();
+  }
+
+  @visibleForTesting
+  void activateRageModeForTesting() {
+    _activateRageMode();
   }
 
   void _triggerBeamHint() {
@@ -299,6 +372,7 @@ class RageTapGame extends FlameGame {
       bonusScore = 0;
       nearMissCount = 0;
       nearMissCooldown = 0.0;
+      _endRageMode();
       player.resetAnimation();
       if (_saveService.bestScore > bestScore.value) {
         bestScore.value = _saveService.bestScore;
@@ -359,6 +433,9 @@ class RageTapGame extends FlameGame {
     _dyingTimer = 0.0;
     state.value = GameState.dying;
     player.isDead = true;
+    if (isRageActive.value) {
+      _endRageMode();
+    }
 
     if (cause == DeathCause.pit) {
       player.isFalling = true;
@@ -438,6 +515,7 @@ class RageTapGame extends FlameGame {
     _hasDied = false;
     _dyingTimer = 0.0;
     _resumeStepTimer = 0.0;
+    _endRageMode();
     _runResultRecorded = false;
     lastResult = null;
 
@@ -484,5 +562,7 @@ class RageTapGame extends FlameGame {
     scoreBonusTrigger.dispose();
     showHitboxes.dispose();
     hint.dispose();
+    rageMeter.dispose();
+    isRageActive.dispose();
   }
 }

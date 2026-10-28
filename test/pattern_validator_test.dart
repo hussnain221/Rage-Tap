@@ -86,8 +86,9 @@ void main() {
   });
 
   group('Pattern library validation tests', () {
-    test('Every pattern in the library is valid at speeds 190, 230, 260, 300', () {
-      const testSpeeds = [190.0, 230.0, 260.0, 300.0];
+    test('Every pattern in the library is valid at speeds 190, 230, 260, 300, and boosted 345', () {
+      final boostedSpeed = C.maxSpeed * C.rageSpeedMultiplier;
+      final testSpeeds = [190.0, 230.0, 260.0, 300.0, boostedSpeed];
 
       for (final pattern in PatternLibrary.patterns) {
         for (final speed in testSpeeds) {
@@ -104,6 +105,22 @@ void main() {
             reason: 'Pattern ${pattern.id} failed validation at speed $speed: ${violations.join("; ")}',
           );
         }
+      }
+    });
+
+    test('Every pattern remains fair at boosted Rage speed (300 * 1.15 = 345 px/s)', () {
+      final boostedSpeed = C.maxSpeed * C.rageSpeedMultiplier;
+      for (final pattern in PatternLibrary.patterns) {
+        final violations = PatternValidator.validatePattern(
+          pattern,
+          minSpeed: boostedSpeed,
+          maxSpeed: boostedSpeed,
+        );
+        expect(
+          violations,
+          isEmpty,
+          reason: 'Pattern ${pattern.id} invalid at boosted speed: ${violations.join("; ")}',
+        );
       }
     });
 

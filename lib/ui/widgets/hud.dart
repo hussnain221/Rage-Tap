@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants.dart';
 import '../../core/palette.dart';
 import '../../core/theme.dart';
 import '../../game/game_state.dart';
@@ -119,6 +120,10 @@ class _GameHudState extends State<GameHud>
                     },
                   ),
                 ),
+                if (C.rageEnabled) ...[
+                  const SizedBox(height: 4),
+                  _RageMeterBar(game: widget.game),
+                ],
                 IgnorePointer(
                   child: ValueListenableBuilder<String?>(
                     valueListenable: widget.game.hint,
@@ -165,6 +170,66 @@ class _GameHudState extends State<GameHud>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RageMeterBar extends StatelessWidget {
+  const _RageMeterBar({required this.game});
+
+  final RageTapGame game;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: game.isRageActive,
+      builder: (context, isRage, _) {
+        return ValueListenableBuilder<double>(
+          valueListenable: game.rageMeter,
+          builder: (context, meterVal, _) {
+            final fillPercent = (meterVal / 100.0).clamp(0.0, 1.0);
+            return Container(
+              width: C.rageMeterW,
+              height: C.rageMeterH,
+              decoration: BoxDecoration(
+                color: Palette.bgDeep,
+                borderRadius: BorderRadius.circular(C.rageMeterH / 2),
+                border: Border.all(
+                  color: isRage
+                      ? Palette.magenta
+                      : Palette.cyan.withValues(alpha: 0.3),
+                  width: 1.0,
+                ),
+                boxShadow: isRage
+                    ? [
+                        BoxShadow(
+                          color: Palette.magenta.withValues(alpha: 0.6),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+              alignment: Alignment.centerLeft,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(C.rageMeterH / 2),
+                child: Container(
+                  width: C.rageMeterW * fillPercent,
+                  height: C.rageMeterH,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Palette.yellow,
+                        Palette.magenta,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -29,6 +29,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
   double _scaredTimer = 0.0;
   double animTime = 0.0;
   bool isDead = false;
+  bool isRageMode = false;
   ZapExpression? overrideExpression;
 
   final Paint _debugHitboxPaint = Paint()
@@ -107,6 +108,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
     animTime = 0.0;
     isDead = false;
     isFalling = false;
+    isRageMode = false;
   }
 
   void jump() {
@@ -177,6 +179,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
       t: animTime,
       scaleX: scaleX,
       scaleY: scaleY,
+      isRage: isRageMode,
     );
 
     // Hitbox outline in debug mode when toggled on

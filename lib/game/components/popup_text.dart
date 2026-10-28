@@ -38,12 +38,14 @@ class PopupText extends PositionComponent {
 
   static final Paint _layerPaint = Paint();
 
+  bool isExpired = false;
+
   @override
   void update(double dt) {
     super.update(dt);
     _elapsed += dt;
     if (_elapsed >= duration) {
-      removeFromParent();
+      isExpired = true;
       return;
     }
 
@@ -53,6 +55,7 @@ class PopupText extends PositionComponent {
 
   @override
   void render(Canvas canvas) {
+    if (isExpired || _elapsed >= duration) return;
     super.render(canvas);
 
     final progress = (_elapsed / duration).clamp(0.0, 1.0);
