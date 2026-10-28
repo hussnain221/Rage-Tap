@@ -2,19 +2,23 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/palette.dart';
+import '../../data/save_service.dart';
+import '../../game/model/zap_skin.dart';
 import '../../game/painting/zap_painter.dart';
 
-/// Animated Zap at 96x96 running in place on a short neon ground strip,
-/// hopping every 2 seconds.
+/// Animated Zap running in place on a short neon ground strip,
+/// hopping every 2 seconds. Can preview a specific skin or listen to the equipped skin.
 class HomeZap extends StatefulWidget {
   const HomeZap({
     super.key,
     this.size = 96.0,
     this.groundWidth = 180.0,
+    this.skin,
   });
 
   final double size;
   final double groundWidth;
+  final ZapSkin? skin;
 
   @override
   State<HomeZap> createState() => _HomeZapState();
@@ -41,6 +45,20 @@ class _HomeZapState extends State<HomeZap>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.skin != null) {
+      return _buildWithSkin(widget.skin!);
+    }
+
+    return ValueListenableBuilder<String>(
+      valueListenable: SaveService.instance.equippedSkinNotifier,
+      builder: (context, equippedId, _) {
+        final activeSkin = ZapSkin.fromId(equippedId);
+        return _buildWithSkin(activeSkin);
+      },
+    );
+  }
+
+  Widget _buildWithSkin(ZapSkin skin) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
@@ -86,6 +104,7 @@ class _HomeZapState extends State<HomeZap>
                   hopY: hopY,
                   scaleX: scaleX,
                   scaleY: scaleY,
+                  skin: skin,
                 ),
               ),
             ),
@@ -96,12 +115,12 @@ class _HomeZapState extends State<HomeZap>
               decoration: BoxDecoration(
                 color: Palette.groundFill,
                 borderRadius: BorderRadius.circular(4),
-                border: const Border(
-                  top: BorderSide(color: Palette.cyan, width: 3.0),
+                border: Border(
+                  top: BorderSide(color: skin.primaryColor, width: 3.0),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Palette.cyan.withValues(alpha: 0.50),
+                    color: skin.primaryColor.withValues(alpha: 0.50),
                     blurRadius: 8,
                     spreadRadius: 1,
                     offset: const Offset(0, -1),
@@ -124,6 +143,7 @@ class _HomeZapPainter extends CustomPainter {
     required this.hopY,
     required this.scaleX,
     required this.scaleY,
+    required this.skin,
   });
 
   final double size;
@@ -132,6 +152,7 @@ class _HomeZapPainter extends CustomPainter {
   final double hopY;
   final double scaleX;
   final double scaleY;
+  final ZapSkin skin;
 
   @override
   void paint(Canvas canvas, Size canvasSize) {
@@ -143,6 +164,7 @@ class _HomeZapPainter extends CustomPainter {
       t: time,
       scaleX: scaleX,
       scaleY: scaleY,
+      skin: skin,
     );
   }
 
@@ -150,6 +172,7 @@ class _HomeZapPainter extends CustomPainter {
   bool shouldRepaint(covariant _HomeZapPainter oldDelegate) {
     return oldDelegate.time != time ||
         oldDelegate.expression != expression ||
-        oldDelegate.hopY != hopY;
+        oldDelegate.hopY != hopY ||
+        oldDelegate.skin.id != skin.id;
   }
 }

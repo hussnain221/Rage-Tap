@@ -38,7 +38,7 @@ void main() {
     expect(find.text('88'), findsOneWidget);
     expect(find.byIcon(Icons.monetization_on_rounded), findsOneWidget);
     expect(find.text('v1.0.0'), findsOneWidget);
-    expect(find.byType(NeonIconButton), findsOneWidget);
+    expect(find.byType(NeonIconButton), findsNWidgets(2));
 
     // Tap PLAY -> navigate to /game
     await tester.tap(find.text('PLAY'));
@@ -62,9 +62,30 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byType(NeonIconButton));
+    await tester.tap(find.byIcon(Icons.settings));
     await tester.pumpAndSettle();
     expect(settingsNavigated, isTrue);
+  });
+
+  testWidgets('HomeScreen shop button navigates to /shop', (tester) async {
+    bool shopNavigated = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        initialRoute: '/home',
+        routes: {
+          '/home': (context) => const HomeScreen(),
+          '/shop': (context) {
+            shopNavigated = true;
+            return const Scaffold(body: Text('SHOP_SCREEN'));
+          },
+        },
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.shopping_bag_rounded));
+    await tester.pumpAndSettle();
+    expect(shopNavigated, isTrue);
   });
 
   testWidgets('HomeScreen does not overflow on small screen 320x568', (tester) async {

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../audio/audio_service.dart';
 import '../../core/constants.dart';
 import '../game_state.dart';
+import '../model/zap_skin.dart';
 import '../painting/zap_painter.dart';
 import '../rage_tap_game.dart';
 
@@ -171,6 +172,10 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
   void render(Canvas canvas) {
     super.render(canvas);
 
+    final skin = isMounted
+        ? ZapSkin.fromId(game.saveService.equippedSkin)
+        : ZapSkin.zap;
+
     ZapPainter.paintZap(
       canvas,
       origin: Offset.zero,
@@ -180,6 +185,7 @@ class Player extends PositionComponent with HasGameReference<RageTapGame> {
       scaleX: scaleX,
       scaleY: scaleY,
       isRage: isRageMode,
+      skin: skin,
     );
 
     // Hitbox outline in debug mode when toggled on

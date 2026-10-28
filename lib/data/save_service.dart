@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/constants.dart';
+import '../game/model/zap_skin.dart';
 
 class SaveService {
   SaveService._();
@@ -11,6 +12,8 @@ class SaveService {
   static const String keySchemaVersion = 'schema_version';
   static const String keyBestScore = 'best_score';
   static const String keyTotalCoins = 'total_coins';
+  static const String keyOwnedSkins = 'owned_skins';
+  static const String keyEquippedSkin = 'equipped_skin';
   static const String keySoundEnabled = 'sound_enabled';
   static const String keyHapticsEnabled = 'haptics_enabled';
   static const String keyFirstRunDone = 'first_run_done';
@@ -21,6 +24,11 @@ class SaveService {
   SharedPreferences? _prefs;
   final ValueNotifier<int> bestScoreNotifier = ValueNotifier<int>(0);
   final ValueNotifier<int> totalCoinsNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<String> equippedSkinNotifier = ValueNotifier<String>(ZapSkin.zap.id);
+  final ValueNotifier<List<String>> ownedSkinsNotifier =
+      ValueNotifier<List<String>>([ZapSkin.zap.id]);
+
+  bool _isPurchasing = false;
 
   Future<void> init([SharedPreferences? prefs]) async {
     _prefs = prefs ?? await SharedPreferences.getInstance();
@@ -38,6 +46,22 @@ class SaveService {
       }
       await _prefs!.setInt(keySchemaVersion, 2);
     }
+
+    // Load owned and equipped skins (§20.3)
+    final rawOwned = _prefs!.getStringList(keyOwnedSkins);
+    final ownedList = (rawOwned != null && rawOwned.isNotEmpty)
+        ? List<String>.from(rawOwned)
+        : <String>[ZapSkin.zap.id];
+    if (!ownedList.contains(ZapSkin.zap.id)) {
+      ownedList.insert(0, ZapSkin.zap.id);
+    }
+    ownedSkinsNotifier.value = List.unmodifiable(ownedList);
+
+    final rawEquipped = _prefs!.getString(keyEquippedSkin);
+    final equipped = (rawEquipped != null && ownedList.contains(rawEquipped))
+        ? rawEquipped
+        : ZapSkin.zap.id;
+    equippedSkinNotifier.value = equipped;
 
     bestScoreNotifier.value = bestScore;
     totalCoinsNotifier.value = totalCoins;
@@ -63,6 +87,49 @@ class SaveService {
     totalCoinsNotifier.value = next;
     if (_prefs != null) {
       await _prefs!.setInt(keyTotalCoins, next);
+    }
+  }
+
+  String get equippedSkin => equippedSkinNotifier.value;
+
+  List<String> get ownedSkins => ownedSkinsNotifier.value;
+
+  bool isSkinOwned(String skinId) =>
+      skinId == ZapSkin.zap.id || ownedSkins.contains(skinId);
+
+  Future<bool> equipSkin(String skinId) async {
+    if (!isSkinOwned(skinId)) return false;
+    equippedSkinNotifier.value = skinId;
+    if (_prefs != null) {
+      await _prefs!.setString(keyEquippedSkin, skinId);
+    }
+    return true;
+  }
+
+  /// Single purchase function with all checks per spec §20.3:
+  /// verify not owned → verify balance → subtract once → mark owned → save → block double taps.
+  /// Only owned skins equip.
+  Future<bool> purchaseSkin(ZapSkin skin) async {
+    if (_isPurchasing) return false;
+    _isPurchasing = true;
+    try {
+      if (isSkinOwned(skin.id)) return false;
+      if (totalCoins < skin.price) return false;
+
+      final nextCoins = totalCoins - skin.price;
+      final nextOwned = [...ownedSkins, skin.id];
+
+      if (_prefs != null) {
+        await _prefs!.setInt(keyTotalCoins, nextCoins);
+        await _prefs!.setStringList(keyOwnedSkins, nextOwned);
+      }
+      totalCoinsNotifier.value = nextCoins;
+      ownedSkinsNotifier.value = List.unmodifiable(nextOwned);
+
+      await equipSkin(skin.id);
+      return true;
+    } finally {
+      _isPurchasing = false;
     }
   }
 

@@ -5,6 +5,7 @@ import 'core/theme.dart';
 import 'ui/screens/game_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/settings_screen.dart';
+import 'ui/screens/shop_screen.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/screens/widget_gallery_screen.dart';
 
@@ -29,6 +30,9 @@ class RageTapApp extends StatelessWidget {
             break;
           case '/game':
             page = const GameScreen();
+            break;
+          case '/shop':
+            page = const ShopScreen();
             break;
           case '/settings':
             page = const SettingsScreen();

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/palette.dart';
+import '../model/zap_skin.dart';
 
 enum ZapExpression {
   run,
@@ -20,7 +21,6 @@ class ZapPainter {
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
   static final Paint _bodyPaint = Paint()..color = Palette.cyan;
-  static final Paint _deadBodyPaint = Paint()..color = Palette.cyanDark;
   static final Paint _darkBottomPaint = Paint()..color = Palette.cyanDark;
   static final Paint _highlightPaint = Paint()..color = Colors.white.withValues(alpha: 0.25);
 
@@ -69,7 +69,21 @@ class ZapPainter {
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
-  /// Pure painting function that renders Zap per spec §7.1 and §20.1
+  // Special skin paints (§20.3)
+  static final Paint _lightningPaint = Paint()
+    ..color = Colors.white
+    ..style = PaintingStyle.fill;
+
+  static final Paint _crownPaint = Paint()
+    ..color = Palette.yellow
+    ..style = PaintingStyle.fill;
+
+  static final Paint _crownOutlinePaint = Paint()
+    ..color = Palette.bgDeep
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.5;
+
+  /// Pure painting function that renders Zap per spec §7.1, §20.1, and §20.3
   static void paintZap(
     Canvas canvas, {
     Offset origin = Offset.zero,
@@ -79,6 +93,7 @@ class ZapPainter {
     double scaleX = 1.0,
     double scaleY = 1.0,
     bool isRage = false,
+    ZapSkin skin = ZapSkin.zap,
   }) {
     canvas.save();
     canvas.translate(origin.dx, origin.dy);
@@ -118,28 +133,35 @@ class ZapPainter {
         Rect.fromLTWH((22.0 - offset) * s, 36.0 * s, 10.0 * s, 5.0 * s),
         Radius.circular(2.5 * s),
       );
+      _footPaint.color = skin.darkColor;
       canvas.drawRRect(leftFootRect, _footPaint);
       canvas.drawRRect(rightFootRect, _footPaint);
     }
 
-    // 2. Glow (cyan @ 50% alpha, blur 8, or red/flame in Rage Mode) - omitted for dead expression
+    // 2. Glow (skin glow @ alpha, blur 8, or red/flame in Rage Mode) - omitted for dead expression
     final bodyRRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, 40.0 * s, 40.0 * s),
       Radius.circular(10.0 * s),
     );
     if (expression != ZapExpression.dead) {
+      _glowPaint.color = skin.glowColor.withValues(alpha: skin.isTranslucent ? 0.35 : 0.5);
       canvas.drawRRect(bodyRRect, isRage ? _rageGlowPaint : _glowPaint);
     }
 
     // 3. Body: rounded rect 40x40, corner radius 10
-    final bodyPaint = expression == ZapExpression.dead ? _deadBodyPaint : _bodyPaint;
-    canvas.drawRRect(bodyRRect, bodyPaint);
+    _bodyPaint.color = expression == ZapExpression.dead
+        ? skin.darkColor
+        : (skin.isTranslucent
+            ? skin.primaryColor.withValues(alpha: 0.65)
+            : skin.primaryColor);
+    canvas.drawRRect(bodyRRect, _bodyPaint);
 
     if (isRage && expression != ZapExpression.dead) {
       canvas.drawRRect(bodyRRect.inflate(1.5 * s), _rageFlameOutlinePaint);
     }
 
-    // 4. Darker bottom edge strip (4 units) in cyanDark
+    // 4. Darker bottom edge strip (4 units)
+    _darkBottomPaint.color = skin.darkColor.withValues(alpha: skin.isTranslucent ? 0.65 : 1.0);
     canvas.save();
     canvas.clipRRect(bodyRRect);
     canvas.drawRect(
@@ -153,6 +175,34 @@ class ZapPainter {
       Rect.fromLTWH(6.0 * s, 5.0 * s, 10.0 * s, 4.0 * s),
       _highlightPaint,
     );
+
+    // Cosmetic: Lightning mark for Bolt (§20.3)
+    if (skin.hasLightningMark && expression != ZapExpression.dead) {
+      final lightningPath = Path()
+        ..moveTo(21.0 * s, 5.0 * s)
+        ..lineTo(17.0 * s, 11.0 * s)
+        ..lineTo(19.5 * s, 11.0 * s)
+        ..lineTo(18.0 * s, 16.0 * s)
+        ..lineTo(23.0 * s, 9.5 * s)
+        ..lineTo(20.5 * s, 9.5 * s)
+        ..close();
+      canvas.drawPath(lightningPath, _lightningPaint);
+    }
+
+    // Cosmetic: Crown for Royal (§20.3)
+    if (skin.hasCrown && expression != ZapExpression.dead) {
+      final crownPath = Path()
+        ..moveTo(12.0 * s, 2.0 * s)
+        ..lineTo(11.0 * s, -4.0 * s)
+        ..lineTo(16.0 * s, -1.0 * s)
+        ..lineTo(20.0 * s, -7.0 * s)
+        ..lineTo(24.0 * s, -1.0 * s)
+        ..lineTo(29.0 * s, -4.0 * s)
+        ..lineTo(28.0 * s, 2.0 * s)
+        ..close();
+      canvas.drawPath(crownPath, _crownPaint);
+      canvas.drawPath(crownPath, _crownOutlinePaint);
+    }
 
     // 6. Eyes and Pupils
     if (expression == ZapExpression.dead) {
@@ -223,14 +273,10 @@ class ZapPainter {
           width: eyeW,
           height: eyeH,
         );
-        canvas.drawOval(leftEyeRect, _eyeWhitePaint);
-        canvas.drawOval(
-          Rect.fromCenter(
-            center: Offset((13.5 * s) + pupilShiftX, 18.5 * s),
-            width: pupilW,
-            height: pupilH,
-          ),
-          _pupilPaint,
+        final leftPupilRect = Rect.fromCenter(
+          center: Offset((13.5 * s) + pupilShiftX, 18.5 * s),
+          width: pupilW,
+          height: pupilH,
         );
 
         // Right eye & pupil
@@ -239,15 +285,24 @@ class ZapPainter {
           width: eyeW,
           height: eyeH,
         );
-        canvas.drawOval(rightEyeRect, _eyeWhitePaint);
-        canvas.drawOval(
-          Rect.fromCenter(
-            center: Offset((26.5 * s) + pupilShiftX, 18.5 * s),
-            width: pupilW,
-            height: pupilH,
-          ),
-          _pupilPaint,
+        final rightPupilRect = Rect.fromCenter(
+          center: Offset((26.5 * s) + pupilShiftX, 18.5 * s),
+          width: pupilW,
+          height: pupilH,
         );
+
+        if (skin.hasPixelEyes) {
+          // Pixel skin square eyes (§20.3)
+          canvas.drawRect(leftEyeRect, _eyeWhitePaint);
+          canvas.drawRect(leftPupilRect, _pupilPaint);
+          canvas.drawRect(rightEyeRect, _eyeWhitePaint);
+          canvas.drawRect(rightPupilRect, _pupilPaint);
+        } else {
+          canvas.drawOval(leftEyeRect, _eyeWhitePaint);
+          canvas.drawOval(leftPupilRect, _pupilPaint);
+          canvas.drawOval(rightEyeRect, _eyeWhitePaint);
+          canvas.drawOval(rightPupilRect, _pupilPaint);
+        }
       }
     }
 

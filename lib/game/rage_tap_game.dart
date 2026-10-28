@@ -42,6 +42,7 @@ class RageTapGame extends FlameGame {
   }
 
   final SaveService _saveService;
+  SaveService get saveService => _saveService;
   final Spawner spawner;
   final ValueNotifier<GameState> state = ValueNotifier<GameState>(GameState.ready);
   final ValueNotifier<int> score = ValueNotifier<int>(0);
