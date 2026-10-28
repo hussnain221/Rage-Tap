@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() async {
-    SharedPreferences.setMockInitialValues({'best_score': 456});
+    SharedPreferences.setMockInitialValues({'best_score': 456, 'total_coins': 88});
     await SaveService.instance.init();
   });
 
@@ -35,6 +35,8 @@ void main() {
     expect(find.byType(HomeZap), findsOneWidget);
     expect(find.text('PLAY'), findsOneWidget);
     expect(find.text('456'), findsOneWidget);
+    expect(find.text('88'), findsOneWidget);
+    expect(find.byIcon(Icons.monetization_on_rounded), findsOneWidget);
     expect(find.text('v1.0.0'), findsOneWidget);
     expect(find.byType(NeonIconButton), findsOneWidget);
 

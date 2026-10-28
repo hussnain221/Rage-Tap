@@ -6,6 +6,7 @@ import '../../core/palette.dart';
 import '../../core/theme.dart';
 import '../../game/rage_tap_game.dart';
 import '../../game/systems/result_messages.dart';
+import '../../game/systems/scoring.dart';
 import 'neon_button.dart';
 
 /// Results overlay shown upon death per spec §12.5 and Appendix B.
@@ -108,6 +109,8 @@ class _ResultsOverlayState extends State<ResultsOverlay>
     final finalScore = widget.game.score.value;
     final bestScore = widget.game.bestScore.value;
     final isNewBest = widget.game.isNewBest.value;
+    final coins = widget.game.lastResult?.coinsEarned ??
+        Scoring.coinsEarned(score: finalScore, nearMisses: widget.game.nearMissCount);
 
     return FadeTransition(
       opacity: _fadeController,
@@ -244,6 +247,25 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                       style: AppTheme.body.copyWith(
                         color: Palette.yellow,
                         fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Coins earned (+N coins per spec §20.2)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.monetization_on_rounded, color: Palette.yellow, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      '+$coins coins',
+                      style: AppTheme.body.copyWith(
+                        color: Palette.yellow,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
                       ),
                     ),
                   ],

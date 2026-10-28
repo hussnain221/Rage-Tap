@@ -10,6 +10,7 @@ class RunResult {
   final DeathCause? deathCause;
   final int nearMisses;
   final double durationSeconds;
+  final int coinsEarned;
 
   const RunResult({
     required this.score,
@@ -18,6 +19,7 @@ class RunResult {
     this.deathCause,
     this.nearMisses = 0,
     required this.durationSeconds,
+    this.coinsEarned = 0,
   });
 }
 
@@ -29,5 +31,13 @@ class Scoring {
 
   static bool isNewBest(int finalScore, int bestAtStart) {
     return finalScore > bestAtStart && (bestAtStart > 0 || finalScore > 0);
+  }
+
+  /// Calculates coins earned at run end per spec §20.2:
+  /// coins = floor(score / 10) + 2 * nearMisses
+  static int coinsEarned({required int score, required int nearMisses}) {
+    final validScore = score < 0 ? 0 : score;
+    final validNearMisses = nearMisses < 0 ? 0 : nearMisses;
+    return (validScore ~/ 10) + (2 * validNearMisses);
   }
 }

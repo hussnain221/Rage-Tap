@@ -491,6 +491,9 @@ class RageTapGame extends FlameGame {
 
     _saveService.incrementTotalRuns();
 
+    final coins = Scoring.coinsEarned(score: finalScore, nearMisses: nearMissCount);
+    _saveService.addCoins(coins);
+
     lastResult = RunResult(
       score: finalScore,
       best: bestScore.value,
@@ -498,6 +501,7 @@ class RageTapGame extends FlameGame {
       deathCause: lastDeathCause,
       nearMisses: nearMissCount,
       durationSeconds: runTime,
+      coinsEarned: coins,
     );
   }
 

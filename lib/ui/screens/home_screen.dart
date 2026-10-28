@@ -28,18 +28,48 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Top bar: Settings icon (top-right)
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: NeonIconButton(
-                              icon: const Icon(Icons.settings, color: Palette.cyan, size: 24),
-                              tooltip: 'Settings',
-                              onPressed: () {
-                                Navigator.of(context).pushNamed('/settings');
-                              },
-                            ),
+                        // Top bar: Coins (top-left) & Settings icon (top-right)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ValueListenableBuilder<int>(
+                                valueListenable: SaveService.instance.totalCoinsNotifier,
+                                builder: (context, coins, _) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Palette.bgPurple,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: Palette.yellow.withValues(alpha: 0.5)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.monetization_on_rounded, color: Palette.yellow, size: 18),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '$coins',
+                                          style: AppTheme.body.copyWith(
+                                            color: Palette.yellow,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                              NeonIconButton(
+                                icon: const Icon(Icons.settings, color: Palette.cyan, size: 24),
+                                tooltip: 'Settings',
+                                onPressed: () {
+                                  Navigator.of(context).pushNamed('/settings');
+                                },
+                              ),
+                            ],
                           ),
                         ),
 

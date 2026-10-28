@@ -36,6 +36,15 @@ void main() {
       expect(Scoring.isNewBest(5, 5), isFalse);
       expect(Scoring.isNewBest(4, 5), isFalse);
     });
+
+    test('coinsEarned formula per spec §20.2: floor(score/10) + 2*nearMisses', () {
+      expect(Scoring.coinsEarned(score: 0, nearMisses: 0), 0);
+      expect(Scoring.coinsEarned(score: 9, nearMisses: 0), 0);
+      expect(Scoring.coinsEarned(score: 10, nearMisses: 0), 1);
+      expect(Scoring.coinsEarned(score: 45, nearMisses: 3), 10);
+      expect(Scoring.coinsEarned(score: 100, nearMisses: 5), 20);
+      expect(Scoring.coinsEarned(score: -10, nearMisses: -2), 0);
+    });
   });
 
   group('Game scoring and persistence integration', () {

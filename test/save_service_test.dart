@@ -13,11 +13,12 @@ void main() {
       await saveService.init();
 
       expect(saveService.bestScore, 0);
+      expect(saveService.totalCoins, 0);
       expect(saveService.soundEnabled, isTrue);
       expect(saveService.hapticsEnabled, isTrue);
       expect(saveService.firstRunDone, isFalse);
       expect(saveService.totalRuns, 0);
-      expect(saveService.schemaVersion, 1);
+      expect(saveService.schemaVersion, 2);
     });
 
     test('Clamping invalid, negative, or overflow values', () async {
@@ -88,6 +89,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'best_score': 500,
         'total_runs': 42,
+        'total_coins': 75,
         'sound_enabled': false,
         'haptics_enabled': false,
         'first_run_done': true,
@@ -99,6 +101,7 @@ void main() {
 
       expect(saveService.bestScore, 500);
       expect(saveService.totalRuns, 42);
+      expect(saveService.totalCoins, 75);
       expect(saveService.beamHintShown, isTrue);
       expect(saveService.pitHintShown, isTrue);
 
@@ -106,12 +109,54 @@ void main() {
 
       expect(saveService.bestScore, 0);
       expect(saveService.totalRuns, 0);
+      expect(saveService.totalCoins, 0);
       // Preserved settings and hints
       expect(saveService.soundEnabled, isFalse);
       expect(saveService.hapticsEnabled, isFalse);
       expect(saveService.firstRunDone, isTrue);
       expect(saveService.beamHintShown, isTrue);
       expect(saveService.pitHintShown, isTrue);
+    });
+
+    test('Safe migration from schema v1 to v2 adds total_coins', () async {
+      SharedPreferences.setMockInitialValues({
+        'schema_version': 1,
+        'best_score': 350,
+        'total_runs': 12,
+      });
+      final saveService = SaveService.instance;
+      await saveService.init();
+
+      expect(saveService.schemaVersion, 2);
+      expect(saveService.totalCoins, 0);
+      expect(saveService.bestScore, 350);
+      expect(saveService.totalRuns, 12);
+    });
+
+    test('addCoins updates totalCoins and notifies listeners', () async {
+      SharedPreferences.setMockInitialValues({});
+      final saveService = SaveService.instance;
+      await saveService.init();
+
+      expect(saveService.totalCoins, 0);
+      int notifiedCoins = 0;
+      saveService.totalCoinsNotifier.addListener(() {
+        notifiedCoins = saveService.totalCoinsNotifier.value;
+      });
+
+      await saveService.addCoins(15);
+      expect(saveService.totalCoins, 15);
+      expect(notifiedCoins, 15);
+
+      await saveService.addCoins(10);
+      expect(saveService.totalCoins, 25);
+      expect(notifiedCoins, 25);
+
+      // Non-positive amounts have no effect
+      await saveService.addCoins(0);
+      expect(saveService.totalCoins, 25);
+      await saveService.addCoins(-5);
+      expect(saveService.totalCoins, 25);
     });
 
     test('beamHintShown and pitHintShown default to false and persist when set', () async {

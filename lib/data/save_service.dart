@@ -7,8 +7,10 @@ class SaveService {
   SaveService._();
   static final SaveService instance = SaveService._();
 
+  static const int currentSchemaVersion = 2;
   static const String keySchemaVersion = 'schema_version';
   static const String keyBestScore = 'best_score';
+  static const String keyTotalCoins = 'total_coins';
   static const String keySoundEnabled = 'sound_enabled';
   static const String keyHapticsEnabled = 'haptics_enabled';
   static const String keyFirstRunDone = 'first_run_done';
@@ -18,19 +20,50 @@ class SaveService {
 
   SharedPreferences? _prefs;
   final ValueNotifier<int> bestScoreNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<int> totalCoinsNotifier = ValueNotifier<int>(0);
 
   Future<void> init([SharedPreferences? prefs]) async {
     _prefs = prefs ?? await SharedPreferences.getInstance();
-    if (!_prefs!.containsKey(keySchemaVersion)) {
+    final currentVer = _prefs!.getInt(keySchemaVersion) ?? 0;
+
+    // Schema v1 migration
+    if (currentVer < 1) {
       await _prefs!.setInt(keySchemaVersion, 1);
     }
+
+    // Schema v2 migration: add total_coins (§20.2)
+    if (currentVer < 2) {
+      if (!_prefs!.containsKey(keyTotalCoins)) {
+        await _prefs!.setInt(keyTotalCoins, 0);
+      }
+      await _prefs!.setInt(keySchemaVersion, 2);
+    }
+
     bestScoreNotifier.value = bestScore;
+    totalCoinsNotifier.value = totalCoins;
   }
 
   int get schemaVersion {
     final val = _prefs?.get(keySchemaVersion);
     if (val is int && val >= 1) return val;
-    return 1;
+    return currentSchemaVersion;
+  }
+
+  int get totalCoins {
+    final val = _prefs?.get(keyTotalCoins);
+    if (val is int) {
+      return val < 0 ? 0 : val;
+    }
+    return 0;
+  }
+
+  Future<void> addCoins(int amount) async {
+    if (amount <= 0) return;
+    final next = totalCoins + amount;
+    totalCoinsNotifier.value = next;
+    if (_prefs != null) {
+      await _prefs!.setInt(keyTotalCoins, next);
+    }
   }
 
   int get bestScore {
@@ -152,7 +185,9 @@ class SaveService {
     if (_prefs != null) {
       await _prefs!.setInt(keyBestScore, 0);
       await _prefs!.setInt(keyTotalRuns, 0);
+      await _prefs!.setInt(keyTotalCoins, 0);
     }
     bestScoreNotifier.value = 0;
+    totalCoinsNotifier.value = 0;
   }
 }

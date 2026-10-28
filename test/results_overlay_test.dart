@@ -200,6 +200,7 @@ void main() {
       expect(find.text('RETRY'), findsOneWidget);
       expect(find.text('HOME'), findsOneWidget);
       expect(find.text('BEST  '), findsOneWidget);
+      expect(find.text('+5 coins'), findsOneWidget);
 
       // Score counter counts up
       await tester.pump(const Duration(milliseconds: 350));
