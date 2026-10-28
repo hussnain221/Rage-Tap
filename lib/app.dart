@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'core/theme.dart';
+import 'ui/screens/daily_challenge_screen.dart';
 import 'ui/screens/game_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/settings_screen.dart';
@@ -30,6 +31,9 @@ class RageTapApp extends StatelessWidget {
             break;
           case '/game':
             page = const GameScreen();
+            break;
+          case '/daily':
+            page = const DailyChallengeScreen();
             break;
           case '/shop':
             page = const ShopScreen();

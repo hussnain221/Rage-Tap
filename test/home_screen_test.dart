@@ -46,6 +46,28 @@ void main() {
     expect(playNavigated, isTrue);
   });
 
+  testWidgets('HomeScreen daily challenge button navigates to /daily', (tester) async {
+    bool dailyNavigated = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        initialRoute: '/home',
+        routes: {
+          '/home': (context) => const HomeScreen(),
+          '/daily': (context) {
+            dailyNavigated = true;
+            return const Scaffold(body: Text('DAILY_SCREEN'));
+          },
+        },
+      ),
+    );
+
+    expect(find.text('DAILY CHALLENGE'), findsOneWidget);
+    await tester.tap(find.text('DAILY CHALLENGE'));
+    await tester.pumpAndSettle();
+    expect(dailyNavigated, isTrue);
+  });
+
   testWidgets('HomeScreen settings button navigates to /settings', (tester) async {
     bool settingsNavigated = false;
 

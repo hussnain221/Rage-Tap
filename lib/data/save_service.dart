@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/constants.dart';
+import '../game/model/daily_challenge.dart';
 import '../game/model/zap_skin.dart';
 
 class SaveService {
@@ -14,6 +15,7 @@ class SaveService {
   static const String keyTotalCoins = 'total_coins';
   static const String keyOwnedSkins = 'owned_skins';
   static const String keyEquippedSkin = 'equipped_skin';
+  static const String keyLastDailyCompletedDate = 'last_daily_completed_date';
   static const String keySoundEnabled = 'sound_enabled';
   static const String keyHapticsEnabled = 'haptics_enabled';
   static const String keyFirstRunDone = 'first_run_done';
@@ -27,6 +29,7 @@ class SaveService {
   final ValueNotifier<String> equippedSkinNotifier = ValueNotifier<String>(ZapSkin.zap.id);
   final ValueNotifier<List<String>> ownedSkinsNotifier =
       ValueNotifier<List<String>>([ZapSkin.zap.id]);
+  final ValueNotifier<String?> lastDailyCompletedDateNotifier = ValueNotifier<String?>(null);
 
   bool _isPurchasing = false;
 
@@ -62,6 +65,8 @@ class SaveService {
         ? rawEquipped
         : ZapSkin.zap.id;
     equippedSkinNotifier.value = equipped;
+
+    lastDailyCompletedDateNotifier.value = _prefs!.getString(keyLastDailyCompletedDate);
 
     bestScoreNotifier.value = bestScore;
     totalCoinsNotifier.value = totalCoins;
@@ -131,6 +136,21 @@ class SaveService {
     } finally {
       _isPurchasing = false;
     }
+  }
+
+  String? get lastDailyCompletedDate => lastDailyCompletedDateNotifier.value;
+
+  bool isDailyCompleted(String dateKey) => lastDailyCompletedDate == dateKey;
+
+  /// Claims reward for the daily challenge once per day per spec §20.4.
+  Future<bool> claimDailyReward(DailyChallenge challenge) async {
+    if (isDailyCompleted(challenge.dateKey)) return false;
+    lastDailyCompletedDateNotifier.value = challenge.dateKey;
+    if (_prefs != null) {
+      await _prefs!.setString(keyLastDailyCompletedDate, challenge.dateKey);
+    }
+    await addCoins(challenge.rewardCoins);
+    return true;
   }
 
   int get bestScore {

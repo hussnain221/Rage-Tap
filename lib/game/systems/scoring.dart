@@ -11,6 +11,9 @@ class RunResult {
   final int nearMisses;
   final double durationSeconds;
   final int coinsEarned;
+  final bool isDailyChallenge;
+  final bool dailyGoalMet;
+  final bool dailyRewardClaimed;
 
   const RunResult({
     required this.score,
@@ -20,6 +23,9 @@ class RunResult {
     this.nearMisses = 0,
     required this.durationSeconds,
     this.coinsEarned = 0,
+    this.isDailyChallenge = false,
+    this.dailyGoalMet = false,
+    this.dailyRewardClaimed = false,
   });
 }
 

@@ -8,6 +8,7 @@ import '../../audio/audio_service.dart';
 import '../../core/constants.dart';
 import '../../core/palette.dart';
 import '../../game/game_state.dart';
+import '../../game/model/daily_challenge.dart';
 import '../../game/rage_tap_game.dart';
 import '../widgets/hud.dart';
 import '../widgets/pause_overlay.dart';
@@ -20,9 +21,11 @@ class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
     this.game,
+    this.dailyChallenge,
   });
 
   final RageTapGame? game;
+  final DailyChallenge? dailyChallenge;
 
   @override
   State<GameScreen> createState() => GameScreenState();
@@ -53,6 +56,7 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   ValueNotifier<_DebugInfo>? _debugNotifier;
   Timer? _debugTimer;
   int? _activePointerId;
+  bool _initialized = false;
 
   RageTapGame get game => _game;
 
@@ -70,15 +74,29 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _game = widget.game ?? RageTapGame();
+  }
 
-    if (kDebugMode) {
-      _debugNotifier = ValueNotifier<_DebugInfo>(_currentDebugInfo);
-      _debugTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
-        if (mounted && _debugNotifier != null) {
-          _debugNotifier!.value = _currentDebugInfo;
-        }
-      });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      final args = ModalRoute.of(context)?.settings.arguments;
+      final challenge = widget.dailyChallenge ?? (args is DailyChallenge ? args : null);
+
+      _game = widget.game ??
+          (challenge != null
+              ? RageTapGame(seed: challenge.seed, dailyChallenge: challenge)
+              : RageTapGame());
+
+      if (kDebugMode) {
+        _debugNotifier = ValueNotifier<_DebugInfo>(_currentDebugInfo);
+        _debugTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+          if (mounted && _debugNotifier != null) {
+            _debugNotifier!.value = _currentDebugInfo;
+          }
+        });
+      }
     }
   }
 

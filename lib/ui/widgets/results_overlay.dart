@@ -271,6 +271,37 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                   ],
                 ),
 
+                if (widget.game.lastResult?.isDailyChallenge == true) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: widget.game.lastResult?.dailyGoalMet == true
+                          ? Palette.green.withValues(alpha: 0.15)
+                          : Palette.bgPurple,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: widget.game.lastResult?.dailyGoalMet == true
+                            ? Palette.green
+                            : Palette.muted.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      widget.game.lastResult?.dailyGoalMet == true
+                          ? (widget.game.lastResult?.dailyRewardClaimed == true
+                              ? '★ DAILY GOAL MET! +50 BONUS COINS ★'
+                              : '★ DAILY GOAL MET! ★')
+                          : 'Daily Goal: ${widget.game.dailyChallenge?.goalDescription ?? ""}',
+                      style: AppTheme.caption.copyWith(
+                        color: widget.game.lastResult?.dailyGoalMet == true
+                            ? Palette.green
+                            : Palette.muted,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 20),
 
                 // Funny message from Appendix B

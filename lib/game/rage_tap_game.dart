@@ -18,6 +18,7 @@ import 'components/player.dart';
 import 'components/popup_text.dart';
 import 'components/telegraph.dart';
 import 'game_state.dart';
+import 'model/daily_challenge.dart';
 import 'systems/difficulty.dart';
 import 'systems/near_miss.dart';
 import 'systems/scoring.dart';
@@ -28,6 +29,7 @@ class RageTapGame extends FlameGame {
     SaveService? saveService,
     Spawner? spawner,
     int? seed,
+    this.dailyChallenge,
   })  : _saveService = saveService ?? SaveService.instance,
         spawner = spawner ?? Spawner(seed: seed),
         super(
@@ -41,6 +43,7 @@ class RageTapGame extends FlameGame {
     _bestAtStart = bestScore.value;
   }
 
+  final DailyChallenge? dailyChallenge;
   final SaveService _saveService;
   SaveService get saveService => _saveService;
   final Spawner spawner;
@@ -495,6 +498,20 @@ class RageTapGame extends FlameGame {
     final coins = Scoring.coinsEarned(score: finalScore, nearMisses: nearMissCount);
     _saveService.addCoins(coins);
 
+    bool goalMet = false;
+    bool rewardClaimed = false;
+    if (dailyChallenge != null) {
+      goalMet = dailyChallenge!.isGoalMet(
+        score: finalScore,
+        nearMisses: nearMissCount,
+        durationSeconds: runTime,
+      );
+      if (goalMet && !_saveService.isDailyCompleted(dailyChallenge!.dateKey)) {
+        rewardClaimed = true;
+        _saveService.claimDailyReward(dailyChallenge!);
+      }
+    }
+
     lastResult = RunResult(
       score: finalScore,
       best: bestScore.value,
@@ -503,6 +520,9 @@ class RageTapGame extends FlameGame {
       nearMisses: nearMissCount,
       durationSeconds: runTime,
       coinsEarned: coins,
+      isDailyChallenge: dailyChallenge != null,
+      dailyGoalMet: goalMet,
+      dailyRewardClaimed: rewardClaimed,
     );
   }
 

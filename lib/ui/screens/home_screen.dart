@@ -109,17 +109,29 @@ class HomeScreen extends StatelessWidget {
 
                         const Spacer(flex: 2),
 
-                        // Big primary PLAY button (240x68)
+                        // Big primary PLAY button (240x60)
                         NeonButton.primary(
                           text: 'PLAY',
                           width: 240,
-                          height: 68,
+                          height: 60,
                           onPressed: () {
                             Navigator.of(context).pushNamed('/game');
                           },
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
+
+                        // Daily Challenge button (240x46)
+                        NeonButton.secondary(
+                          text: 'DAILY CHALLENGE',
+                          width: 240,
+                          height: 46,
+                          onPressed: () {
+                            Navigator.of(context).pushNamed('/daily');
+                          },
+                        ),
+
+                        const SizedBox(height: 14),
 
                         // Best score label
                         ValueListenableBuilder<int>(
