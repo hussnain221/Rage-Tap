@@ -109,9 +109,13 @@ class HazardPainters {
     ..color = Palette.yellow
     ..style = PaintingStyle.fill;
 
+  // Fixed blur paint — alpha modulation done via canvas.saveLayer, not by mutating .color
   static final Paint _tallAntennaTipGlowPaint = Paint()
-    ..color = Palette.yellow
+    ..color = Palette.yellow.withValues(alpha: 0.5)
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+  // Reusable layer paint — we set alpha once per draw call without touching blur paint
+  static final Paint _layerPaint = Paint();
 
   // --- Overhead beam cached assets ---
   static const double _beamDroneW = C.beamDroneW; // 44
@@ -160,6 +164,7 @@ class HazardPainters {
       colors: [Palette.orange, Palette.magenta],
     ).createShader(_beamColRect);
 
+  // Fixed blur paint — alpha modulation done via canvas.saveLayer, not by mutating .color
   static final Paint _beamGlowPaint = Paint()
     ..color = Palette.magenta.withValues(alpha: 0.40)
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
@@ -333,9 +338,12 @@ class HazardPainters {
     canvas.drawLine(const Offset(15, 0), const Offset(15, -8), _tallAntennaPaint);
 
     // 5. Glowing yellow tip at (15, -8) pulsing at ~1.5 Hz
+    // Use saveLayer alpha to avoid mutating the blur Paint's color every frame
     final pulse = 0.6 + 0.4 * math.sin(t * 1.5 * 2 * math.pi);
-    _tallAntennaTipGlowPaint.color = Palette.yellow.withValues(alpha: 0.5 * pulse);
+    _layerPaint.color = Color.fromARGB((255 * pulse).round(), 255, 255, 255);
+    canvas.saveLayer(const Rect.fromLTWH(9, -14, 12, 12), _layerPaint);
     canvas.drawCircle(const Offset(15, -8), 3.0, _tallAntennaTipGlowPaint);
+    canvas.restore();
     canvas.drawCircle(const Offset(15, -8), 3.0, _tallAntennaTipPaint);
 
     canvas.restore();
@@ -352,9 +360,12 @@ class HazardPainters {
     canvas.translate(origin.dx, origin.dy);
 
     // 1. Beam outer glow (soft pulse at ~2.5 Hz, alpha 0.75-1.0)
+    // Use saveLayer alpha to avoid mutating the blur Paint's color every frame
     final pulse = 0.75 + 0.25 * math.sin(t * 2.5 * 2 * math.pi);
-    _beamGlowPaint.color = Palette.magenta.withValues(alpha: 0.40 * pulse);
+    _layerPaint.color = Color.fromARGB((255 * pulse).round(), 255, 255, 255);
+    canvas.saveLayer(_beamColRect, _layerPaint);
     canvas.drawRect(_beamColRect, _beamGlowPaint);
+    canvas.restore();
 
     // 2. Beam column (width 10, vertical gradient orange to magenta)
     canvas.drawRect(_beamColRect, _beamColumnPaint);

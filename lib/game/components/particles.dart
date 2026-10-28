@@ -80,7 +80,14 @@ class ParticleEffects extends Component with HasGameReference<RageTapGame> {
   double _hitFreezeTimer = 0.0;
   final Vector2 _deathPosition = Vector2.zero();
 
-  int get activeParticleCount => _pool.where((p) => p.active).length;
+  int get activeParticleCount {
+    int count = 0;
+    for (int i = 0; i < poolSize; i++) {
+      if (_pool[i].active) count++;
+    }
+    return count;
+  }
+
   bool get isShaking => _shakeActive;
   bool get isFlashing => _flashActive;
   bool get isHitFreezeActive => _deathParticlesPending && _hitFreezeTimer > 0;

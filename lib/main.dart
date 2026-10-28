@@ -21,7 +21,7 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -33,5 +33,4 @@ void main() async {
 
   runApp(const RageTapApp());
 }
-
 

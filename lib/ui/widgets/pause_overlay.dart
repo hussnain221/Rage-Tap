@@ -116,7 +116,17 @@ class _PauseOverlayState extends State<PauseOverlay> {
               text: 'HOME',
               width: 260,
               height: 48,
-              onPressed: widget.onHomePressed ?? () => Navigator.of(context).pop(),
+              onPressed: () {
+                if (widget.game.score.value > widget.game.bestScore.value) {
+                  widget.game.bestScore.value = widget.game.score.value;
+                }
+                _save.setBestIfHigher(widget.game.score.value);
+                if (widget.onHomePressed != null) {
+                  widget.onHomePressed!();
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
             ),
             const SizedBox(height: 20),
 

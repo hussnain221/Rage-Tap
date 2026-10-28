@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/constants.dart';
@@ -16,12 +17,14 @@ class SaveService {
   static const String keyPitHintShown = 'pit_hint_shown';
 
   SharedPreferences? _prefs;
+  final ValueNotifier<int> bestScoreNotifier = ValueNotifier<int>(0);
 
   Future<void> init([SharedPreferences? prefs]) async {
     _prefs = prefs ?? await SharedPreferences.getInstance();
     if (!_prefs!.containsKey(keySchemaVersion)) {
       await _prefs!.setInt(keySchemaVersion, 1);
     }
+    bestScoreNotifier.value = bestScore;
   }
 
   int get schemaVersion {
@@ -41,6 +44,7 @@ class SaveService {
   Future<bool> setBestIfHigher(int score) async {
     final clamped = score.clamp(0, C.maxScore);
     if (clamped > bestScore) {
+      bestScoreNotifier.value = clamped;
       if (_prefs != null) {
         await _prefs!.setInt(keyBestScore, clamped);
       }
@@ -149,5 +153,6 @@ class SaveService {
       await _prefs!.setInt(keyBestScore, 0);
       await _prefs!.setInt(keyTotalRuns, 0);
     }
+    bestScoreNotifier.value = 0;
   }
 }

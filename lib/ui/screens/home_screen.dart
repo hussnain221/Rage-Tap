@@ -13,8 +13,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bestScore = SaveService.instance.bestScore;
-
     return Scaffold(
       backgroundColor: Palette.bgDeep,
       body: SafeArea(
@@ -78,26 +76,31 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(height: 16),
 
                         // Best score label
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'BEST  ',
-                              style: AppTheme.caption.copyWith(
-                                color: Palette.yellow,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                            Text(
-                              '$bestScore',
-                              style: AppTheme.h1.copyWith(
-                                color: Palette.yellow,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ],
+                        ValueListenableBuilder<int>(
+                          valueListenable: SaveService.instance.bestScoreNotifier,
+                          builder: (context, best, _) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'BEST  ',
+                                  style: AppTheme.caption.copyWith(
+                                    color: Palette.yellow,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                                Text(
+                                  '$best',
+                                  style: AppTheme.h1.copyWith(
+                                    color: Palette.yellow,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
 
                         const Spacer(flex: 2),

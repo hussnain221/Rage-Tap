@@ -98,13 +98,16 @@ class RageTapGame extends FlameGame {
     _activeObstacles.clear();
     hint.value = null;
     _hintTimer = null;
-    for (final child in world.children.toList()) {
-      if (child is Obstacle) {
-        child.x = -1000;
-        child.removeFromParent();
-      } else if (child is PopupText) {
-        child.removeFromParent();
+    // Collect removals first to avoid modifying the collection mid-iteration
+    final toRemove = <Component>[];
+    for (final child in world.children) {
+      if (child is Obstacle || child is PopupText) {
+        toRemove.add(child);
       }
+    }
+    for (final child in toRemove) {
+      if (child is Obstacle) child.x = -1000;
+      child.removeFromParent();
     }
   }
 
@@ -136,12 +139,18 @@ class RageTapGame extends FlameGame {
       runTime += clampedDt;
       currentSpeed = Difficulty.speed(runTime);
       distance += currentSpeed * clampedDt;
-      score.value = Scoring.pointsFromDistance(distance) + bonusScore;
+      final currentScore = Scoring.pointsFromDistance(distance) + bonusScore;
+      score.value = currentScore;
+      if (currentScore > bestScore.value) {
+        bestScore.value = currentScore;
+      }
 
       // Update player physics
       player.step(clampedDt);
 
-      // Collect active obstacles into reusable buffer (zero per-frame allocations)
+      // Collect active obstacles into reusable buffer (no world.children scan per frame)
+      // _activeObstacles is maintained: populated on spawn, removed below when off-screen.
+      // We still rebuild it once per frame for isRemoving checks.
       _activeObstacles.clear();
       for (final child in world.children) {
         if (child is Obstacle && !child.isRemoving) {
@@ -254,7 +263,11 @@ class RageTapGame extends FlameGame {
     bonusScore += C.nearMissBonus;
     nearMissCount++;
     nearMissCooldown = C.nearMissCooldownSec;
-    score.value = Scoring.pointsFromDistance(distance) + bonusScore;
+    final currentScore = Scoring.pointsFromDistance(distance) + bonusScore;
+    score.value = currentScore;
+    if (currentScore > bestScore.value) {
+      bestScore.value = currentScore;
+    }
     scoreBonusTrigger.value++;
     player.triggerScared();
     world.add(PopupText(
@@ -459,6 +472,9 @@ class RageTapGame extends FlameGame {
   }
 
   void disposeGame() {
+    if (score.value > _saveService.bestScore) {
+      _saveService.setBestIfHigher(score.value);
+    }
     particles.clear();
     state.dispose();
     score.dispose();

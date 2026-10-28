@@ -3,6 +3,7 @@
         android:label="Rage Tap"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:enableOnBackInvokedCallback="true">
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"

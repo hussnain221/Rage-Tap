@@ -226,28 +226,28 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                       ),
                     ],
                   ),
-                ] else ...[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'BEST  ',
-                        style: AppTheme.caption.copyWith(
-                          color: Palette.yellow,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      Text(
-                        '$bestScore',
-                        style: AppTheme.body.copyWith(
-                          color: Palette.yellow,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 8),
                 ],
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'BEST  ',
+                      style: AppTheme.caption.copyWith(
+                        color: Palette.yellow,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    Text(
+                      '$bestScore',
+                      style: AppTheme.body.copyWith(
+                        color: Palette.yellow,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: 20),
 
