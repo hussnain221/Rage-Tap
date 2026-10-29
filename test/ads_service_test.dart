@@ -16,15 +16,13 @@ void main() {
     SharedPreferences.setMockInitialValues({'total_coins': 100});
     await SaveService.instance.init();
     AdsService.instance.dispose();
-    AdsService.instance.testShowHandler = null;
   });
 
   tearDown(() {
     AdsService.instance.dispose();
-    AdsService.instance.testShowHandler = null;
   });
 
-  group('AdsService unit tests (§20.6)', () {
+  group('AdsService Rewarded unit tests (§20.6)', () {
     test('Initial state: no ad loaded', () {
       expect(AdsService.instance.isRewardedLoaded, isFalse);
     });
@@ -58,6 +56,99 @@ void main() {
       expect(C.admobAppId, 'ca-app-pub-3940256099942544~3347511713');
       expect(C.rewardedAdUnitId, 'ca-app-pub-3940256099942544/5224354917');
       expect(C.interstitialAdUnitId, 'ca-app-pub-3940256099942544/1033173712');
+      expect(C.interstitialsEnabled, isFalse);
+      expect(C.interstitialMinRuns, 4);
+      expect(C.interstitialMinIntervalSec, 180);
+    });
+  });
+
+  group('AdsService Interstitial unit tests (§20.6)', () {
+    test('Initial state: no interstitial loaded, runs = 0', () {
+      expect(AdsService.instance.isInterstitialLoaded, isFalse);
+      expect(AdsService.instance.completedRunsSinceLastInterstitial, 0);
+      expect(AdsService.instance.interstitialsEnabled, isFalse);
+    });
+
+    test('canShowInterstitial returns false by default (interstitials disabled)', () {
+      AdsService.instance.resetTrackingForTesting(
+        completedRuns: 10,
+        lastTime: DateTime.now().subtract(const Duration(minutes: 10)),
+        isLoaded: true,
+      );
+      expect(AdsService.instance.canShowInterstitial(), isFalse);
+    });
+
+    test('canShowInterstitial respects strict limits (runs >= 4 and time >= 3 min)', () {
+      AdsService.instance.setInterstitialsEnabledForTesting(true);
+      final baseTime = DateTime(2026, 10, 30, 12, 0, 0);
+
+      // 1. Not loaded -> false
+      AdsService.instance.resetTrackingForTesting(
+        completedRuns: 4,
+        lastTime: baseTime,
+        isLoaded: false,
+      );
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isFalse);
+
+      // 2. Loaded, but completed runs < 4 -> false
+      AdsService.instance.resetTrackingForTesting(
+        completedRuns: 3,
+        lastTime: baseTime,
+        isLoaded: true,
+      );
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isFalse);
+
+      // 3. Loaded, runs >= 4, but elapsed time < 180s (e.g. 179s) -> false
+      AdsService.instance.resetTrackingForTesting(
+        completedRuns: 4,
+        lastTime: baseTime,
+        isLoaded: true,
+      );
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 179))), isFalse);
+
+      // 4. Loaded, runs >= 4, and elapsed time >= 180s -> true
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 180))), isTrue);
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isTrue);
+    });
+
+    test('showInterstitialIfEligible executes action immediately when ineligible', () async {
+      AdsService.instance.setInterstitialsEnabledForTesting(true);
+      // Not eligible (runs = 0)
+      bool actionExecuted = false;
+      final shown = await AdsService.instance.showInterstitialIfEligible(
+        onAction: () => actionExecuted = true,
+      );
+      expect(shown, isFalse);
+      expect(actionExecuted, isTrue);
+    });
+
+    test('showInterstitialIfEligible shows ad, resets counters, and executes action upon dismissal', () async {
+      AdsService.instance.setInterstitialsEnabledForTesting(true);
+      final startTime = DateTime(2026, 10, 30, 12, 0, 0);
+      AdsService.instance.resetTrackingForTesting(
+        completedRuns: 5,
+        lastTime: startTime,
+        isLoaded: true,
+      );
+
+      bool actionExecuted = false;
+      AdsService.instance.testInterstitialShowHandler = ({required VoidCallback onDismissed}) async {
+        // simulate ad display and user dismiss
+        onDismissed();
+        return true;
+      };
+
+      final adTime = startTime.add(const Duration(minutes: 4));
+      final shown = await AdsService.instance.showInterstitialIfEligible(
+        onAction: () => actionExecuted = true,
+        now: adTime,
+      );
+
+      expect(shown, isTrue);
+      expect(actionExecuted, isTrue);
+      expect(AdsService.instance.completedRunsSinceLastInterstitial, 0);
+      expect(AdsService.instance.lastInterstitialTime, adTime);
+      expect(AdsService.instance.isInterstitialLoaded, isFalse);
     });
   });
 
@@ -132,6 +223,112 @@ void main() {
       // Verified: RETRY still works immediately without delay
       await tester.tap(find.text('RETRY'));
       expect(game.state.value, equals(GameState.playing));
+    });
+  });
+
+  group('ResultsOverlay Interstitial Ad UI integration (§20.6)', () {
+    testWidgets('Mounting ResultsOverlay records a completed run', (tester) async {
+      final initialRuns = AdsService.instance.completedRunsSinceLastInterstitial;
+      final game = RageTapGame(seed: 42);
+      game.state.value = GameState.results;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResultsOverlay(game: game),
+          ),
+        ),
+      );
+
+      expect(AdsService.instance.completedRunsSinceLastInterstitial, initialRuns + 1);
+    });
+
+    testWidgets('Tapping RETRY when interstitials are disabled works instantly', (tester) async {
+      final game = RageTapGame(seed: 42);
+      game.state.value = GameState.results;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResultsOverlay(game: game),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('RETRY'));
+      expect(game.state.value, equals(GameState.playing));
+    });
+
+    testWidgets('Tapping RETRY when interstitial is eligible shows ad before retrying', (tester) async {
+      AdsService.instance.setInterstitialsEnabledForTesting(true);
+      AdsService.instance.resetTrackingForTesting(
+        completedRuns: 4,
+        lastTime: DateTime.now().subtract(const Duration(minutes: 5)),
+        isLoaded: true,
+      );
+
+      int adShownCount = 0;
+      AdsService.instance.testInterstitialShowHandler = ({required VoidCallback onDismissed}) async {
+        adShownCount++;
+        onDismissed();
+        return true;
+      };
+
+      final game = RageTapGame(seed: 42);
+      game.state.value = GameState.results;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResultsOverlay(game: game),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('RETRY'));
+      await tester.pump();
+
+      expect(adShownCount, 1);
+      expect(game.state.value, equals(GameState.playing));
+      expect(AdsService.instance.completedRunsSinceLastInterstitial, 0);
+    });
+
+    testWidgets('Tapping HOME triggers interstitial if eligible and proceeds to home callback', (tester) async {
+      AdsService.instance.setInterstitialsEnabledForTesting(true);
+      AdsService.instance.resetTrackingForTesting(
+        completedRuns: 4,
+        lastTime: DateTime.now().subtract(const Duration(minutes: 5)),
+        isLoaded: true,
+      );
+
+      int adShownCount = 0;
+      AdsService.instance.testInterstitialShowHandler = ({required VoidCallback onDismissed}) async {
+        adShownCount++;
+        onDismissed();
+        return true;
+      };
+
+      final game = RageTapGame(seed: 42);
+      game.state.value = GameState.results;
+      bool homeTapped = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResultsOverlay(
+              game: game,
+              onHomePressed: () => homeTapped = true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('HOME'));
+      await tester.pump();
+
+      expect(adShownCount, 1);
+      expect(homeTapped, isTrue);
+      expect(AdsService.instance.completedRunsSinceLastInterstitial, 0);
     });
   });
 }

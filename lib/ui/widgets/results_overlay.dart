@@ -40,12 +40,33 @@ class _ResultsOverlayState extends State<ResultsOverlay>
   void _onRetry() {
     if (_retrying) return;
     _retrying = true;
-    widget.game.retry();
+    AdsService.instance.showInterstitialIfEligible(
+      onAction: () {
+        if (mounted) {
+          widget.game.retry();
+        }
+      },
+    );
+  }
+
+  void _onHome() {
+    AdsService.instance.showInterstitialIfEligible(
+      onAction: () {
+        if (mounted) {
+          if (widget.onHomePressed != null) {
+            widget.onHomePressed!();
+          } else {
+            Navigator.of(context).pop();
+          }
+        }
+      },
+    );
   }
 
   @override
   void initState() {
     super.initState();
+    AdsService.instance.recordRunCompleted();
 
     final result = widget.game.lastResult;
     final isNewBest = widget.game.isNewBest.value;
@@ -412,7 +433,7 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                   text: 'HOME',
                   width: 280,
                   height: 48,
-                  onPressed: widget.onHomePressed ?? () => Navigator.of(context).pop(),
+                  onPressed: _onHome,
                 ),
 
                           const Spacer(flex: 1),
