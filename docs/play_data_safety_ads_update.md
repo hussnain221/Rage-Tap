@@ -70,3 +70,4 @@ This document details the exact changes to make in the **Google Play Console** f
 Ensure your live Privacy Policy link is up to date in **App content → Privacy policy**:
 `https://sites.google.com/view/stormlogix-privacy-policy/ragetap`
 (The policy HTML and Markdown files in `docs/` have been updated with AdMob and UMP disclosures).
+

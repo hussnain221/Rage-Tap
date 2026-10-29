@@ -127,5 +127,5 @@ class C {
       'https://sites.google.com/view/stormlogix-privacy-policy/ragetap';
   static const String publisherName = 'StormLogix';
   static const String contactEmail = 'stormlogix1@gmail.com';
-  static const String appVersion = 'v1.0.0';
+  static const String appVersion = 'v1.1.0';
 }

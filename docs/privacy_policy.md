@@ -16,14 +16,16 @@ We respect your privacy. This Privacy Policy explains our practices regarding us
 
 ### 2. Data Stored Locally on Your Device
 To provide core game functionality, Rage Tap saves small operational data exclusively on your device's local storage:
-- **Best score & run statistics** (to display your high score).
+- **Best score & run statistics** (to display your high score and distance).
+- **Coins & unlockable cosmetics** (coins earned from gameplay and owned/equipped character skins).
+- **Daily Challenge progression** (last completed challenge date).
 - **Player settings** (sound effects toggle and vibration/haptics toggle).
 - **One-time tutorial hint flags** (to ensure introductory teaching banners appear only once).
 
 **This data never leaves your device.** It is stored locally using standard Android storage (`SharedPreferences`) and is permanently erased when you uninstall the game or clear app storage.
 
 ### 3. Advertising & Third-Party Services (Google AdMob)
-Rage Tap uses **Google AdMob** (Google Mobile Ads SDK) to serve optional rewarded video advertisements (e.g., doubling in-game coins earned during a run). AdMob and its partners may collect and process certain device information to serve ads and prevent fraud:
+Rage Tap uses **Google AdMob** (Google Mobile Ads SDK) to serve in-game advertisements, including optional rewarded video ads (e.g., doubling in-game coins earned during a run) and strictly capped results-screen interstitial ads. AdMob and its partners may collect and process certain device information to serve ads and prevent fraud:
 - **Device Identifiers:** Google Advertising ID (GAID) and device hardware specifications.
 - **Diagnostics and Performance Data:** Ad interactions, load times, crash logs, and diagnostics.
 - **General Location:** Coarse geographic area inferred from IP address for ad delivery and regulatory compliance.
