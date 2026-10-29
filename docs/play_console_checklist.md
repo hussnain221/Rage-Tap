@@ -120,7 +120,7 @@ Navigate to **Policy and programs** → **App content**. Complete each required 
 
 ### 2. Ads
 - **Does your app contain ads?**
-  Select **No, my app does not contain ads**.
+  Select **Yes, my app contains ads** (for opt-in rewarded video ads per spec §20.6).
 - Click **Save**.
 
 ### 3. App Access
@@ -149,9 +149,9 @@ Click **Start questionnaire**:
 - Click **Save**.
 
 ### 6. Data Safety Form
-Because *Rage Tap* is 100% offline with zero third-party tracking or analytics SDKs:
-- **Does your app collect or share any of the required user data types?** Select **No**.
-- **Data security practices:** N/A (no data collected).
+Follow the exact step-by-step instructions in `docs/play_data_safety_ads_update.md` to declare the Google Mobile Ads SDK (AdMob) requirements:
+- **Does your app collect or share any of the required user data types?** Select **Yes**.
+- Declare **Approximate location**, **Crash logs**, **Diagnostics**, and **Device or other IDs** for AdMob.
 - Click **Next** → **Submit**.
 
 ### 7. Government Apps

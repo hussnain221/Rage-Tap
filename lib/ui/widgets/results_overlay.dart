@@ -7,6 +7,8 @@ import '../../core/theme.dart';
 import '../../game/rage_tap_game.dart';
 import '../../game/systems/result_messages.dart';
 import '../../game/systems/scoring.dart';
+import '../../data/ads_service.dart';
+import '../../data/save_service.dart';
 import 'neon_button.dart';
 
 /// Results overlay shown upon death per spec §12.5 and Appendix B.
@@ -32,6 +34,8 @@ class _ResultsOverlayState extends State<ResultsOverlay>
   late final String _message;
   late final List<_ConfettiParticle> _confetti;
   bool _retrying = false;
+  bool _adRewardClaimed = false;
+  int _bonusCoinsGranted = 0;
 
   void _onRetry() {
     if (_retrying) return;
@@ -319,7 +323,79 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                   ),
                 ),
 
-                const Spacer(flex: 3),
+                const Spacer(flex: 2),
+
+                // Optional Rewarded Ad: Double Coins (§20.6)
+                ValueListenableBuilder<bool>(
+                  valueListenable: AdsService.instance.isRewardedLoadedNotifier,
+                  builder: (context, isLoaded, _) {
+                    final doubleBonus = math.max(coins, 5);
+                    if (!isLoaded && !_adRewardClaimed) {
+                      return const SizedBox.shrink();
+                    }
+                    if (_adRewardClaimed) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Palette.green.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Palette.green),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.check_circle_rounded, color: Palette.green, size: 18),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Coins doubled! (+$_bonusCoinsGranted coins)',
+                                style: AppTheme.caption.copyWith(
+                                  color: Palette.green,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.ondemand_video_rounded, color: Palette.yellow, size: 20),
+                        label: Text(
+                          'Watch an ad: double your coins (+$doubleBonus)',
+                          style: AppTheme.caption.copyWith(
+                            color: Palette.yellow,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Palette.yellow, width: 1.5),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          backgroundColor: Palette.yellow.withValues(alpha: 0.12),
+                        ),
+                        onPressed: () async {
+                          await AdsService.instance.showRewardedAd(
+                            onUserEarnedReward: () {
+                              if (mounted && !_adRewardClaimed) {
+                                setState(() {
+                                  _adRewardClaimed = true;
+                                  _bonusCoinsGranted = doubleBonus;
+                                });
+                                SaveService.instance.addCoins(doubleBonus);
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+
+                const Spacer(flex: 1),
 
                 // RETRY button (primary 280x64, lower third thumb zone)
                 NeonButton.primary(

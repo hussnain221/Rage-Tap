@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'data/ads_service.dart';
 import 'data/save_service.dart';
 
 void main() async {
@@ -16,6 +17,7 @@ void main() async {
   };
 
   await SaveService.instance.init();
+  AdsService.instance.init();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -33,4 +35,3 @@ void main() async {
 
   runApp(const RageTapApp());
 }
-

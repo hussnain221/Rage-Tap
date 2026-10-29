@@ -1,6 +1,6 @@
 # Privacy Policy for Rage Tap
 
-**Last Updated:** October 25, 2026
+**Last Updated:** October 29, 2026
 
 **Rage Tap** ("the game", "the app") is an offline mobile arcade game developed and published by **StormLogix** ("we", "us", "our"). 
 
@@ -22,9 +22,13 @@ To provide core game functionality, Rage Tap saves small operational data exclus
 
 **This data never leaves your device.** It is stored locally using standard Android storage (`SharedPreferences`) and is permanently erased when you uninstall the game or clear app storage.
 
-### 3. Third-Party Services & Advertising
-- This release of Rage Tap contains **no third-party advertising SDKs**, no external tracking scripts, and no analytics frameworks.
-- No personal or behavioral data is shared with any third party.
+### 3. Advertising & Third-Party Services (Google AdMob)
+Rage Tap uses **Google AdMob** (Google Mobile Ads SDK) to serve optional rewarded video advertisements (e.g., doubling in-game coins earned during a run). AdMob and its partners may collect and process certain device information to serve ads and prevent fraud:
+- **Device Identifiers:** Google Advertising ID (GAID) and device hardware specifications.
+- **Diagnostics and Performance Data:** Ad interactions, load times, crash logs, and diagnostics.
+- **General Location:** Coarse geographic area inferred from IP address for ad delivery and regulatory compliance.
+
+We implement Google's User Messaging Platform (UMP) to gather required user consent under GDPR and privacy regulations. Learn more about how Google processes ad data at [Google's Advertising Privacy & Terms](https://policies.google.com/technologies/ads).
 
 ### 4. Children’s Privacy (COPPA & GDPR Compliance)
 Rage Tap is designed as a family-safe arcade skill game. Because the app does not collect, store, or share any personal information from any user, it fully complies with the **Children's Online Privacy Protection Act (COPPA)** and the **General Data Protection Regulation (GDPR)**.

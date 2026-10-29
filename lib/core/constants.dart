@@ -113,6 +113,13 @@ class C {
   static const double rageMeterH = 8.0;
   static const double rageOverlayAlpha = 0.15;
 
+  // Ads (§20.6) - Official Google Test IDs only during development
+  static const bool adsEnabled = true;
+  static const String admobAppId = 'ca-app-pub-3940256099942544~3347511713';
+  static const String rewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
+  static const String interstitialAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
+  static const bool interstitialsEnabled = false;
+
   // Metadata & Links
   static const String privacyPolicyUrl =
       'https://sites.google.com/view/stormlogix-privacy-policy/ragetap';
