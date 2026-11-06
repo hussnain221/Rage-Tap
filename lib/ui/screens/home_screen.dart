@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants.dart';
 import '../../core/palette.dart';
 import '../../core/theme.dart';
 import '../../data/save_service.dart';
@@ -167,7 +168,7 @@ class HomeScreen extends StatelessWidget {
                         const Padding(
                           padding: EdgeInsets.only(bottom: 12),
                           child: Text(
-                            'v1.0.0',
+                            C.appVersion,
                             style: AppTheme.caption,
                           ),
                         ),
