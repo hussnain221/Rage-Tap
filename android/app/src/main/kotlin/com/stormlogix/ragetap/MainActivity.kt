@@ -8,4 +8,9 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         GameSfx.register(flutterEngine.dartExecutor.binaryMessenger, this)
     }
+
+    override fun onDestroy() {
+        GameSfx.release()
+        super.onDestroy()
+    }
 }

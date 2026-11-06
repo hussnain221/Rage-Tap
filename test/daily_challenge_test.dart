@@ -117,7 +117,7 @@ void main() {
       await SaveService.instance.init();
     });
 
-    testWidgets('Renders goal of the day, device date note, and START RUN button', (tester) async {
+    testWidgets('Renders goal of the day and START RUN button', (tester) async {
       final testDate = DateTime(2026, 10, 28);
       await tester.pumpWidget(
         MaterialApp(
@@ -126,12 +126,9 @@ void main() {
       );
 
       expect(find.text('DAILY'), findsOneWidget);
-      expect(find.text('DATE: 2026-10-28'), findsOneWidget);
-      expect(find.text('Seed #20261028'), findsOneWidget);
       expect(find.text('GOAL OF THE DAY'), findsOneWidget);
       expect(find.text('+50 coins reward'), findsOneWidget);
       expect(find.text('START RUN'), findsOneWidget);
-      expect(find.textContaining('Note: Daily Challenge uses device date'), findsOneWidget);
     });
 
     testWidgets('Shows COMPLETED TODAY badge when already claimed', (tester) async {

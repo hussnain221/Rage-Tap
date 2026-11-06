@@ -51,4 +51,10 @@ class GameSfx {
         .invokeMethod<void>('keepAlive', {'enable': enable})
         .catchError((_) {});
   }
+
+  /// Stop the silence loop and pause all playing SoundPool streams.
+  static void stopAll() {
+    if (!_active) return;
+    _ch.invokeMethod<void>('stopAll').catchError((_) {});
+  }
 }

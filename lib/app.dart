@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'audio/audio_service.dart';
 import 'core/theme.dart';
+import 'data/ads_service.dart';
 import 'ui/screens/daily_challenge_screen.dart';
 import 'ui/screens/game_screen.dart';
 import 'ui/screens/home_screen.dart';
@@ -10,8 +12,39 @@ import 'ui/screens/shop_screen.dart';
 import 'ui/screens/splash_screen.dart';
 import 'ui/screens/widget_gallery_screen.dart';
 
-class RageTapApp extends StatelessWidget {
+class RageTapApp extends StatefulWidget {
   const RageTapApp({super.key});
+
+  @override
+  State<RageTapApp> createState() => _RageTapAppState();
+}
+
+class _RageTapAppState extends State<RageTapApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      AudioService.instance.stopAll();
+    } else if (state == AppLifecycleState.resumed) {
+      AudioService.instance.resumeKeepAliveIfEnabled();
+    } else if (state == AppLifecycleState.detached) {
+      AudioService.instance.dispose();
+      AdsService.instance.dispose();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

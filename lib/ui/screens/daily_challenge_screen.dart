@@ -19,7 +19,6 @@ class DailyChallengeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = currentDate ?? DateTime.now();
     final challenge = DailyChallenge.forDate(now);
-    final dateDisplay = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     return Scaffold(
       backgroundColor: Palette.bgDeep,
@@ -82,26 +81,6 @@ class DailyChallengeScreen extends StatelessWidget {
                     },
                   ),
                 ],
-              ),
-
-              const Spacer(flex: 1),
-
-              // Date Header
-              Text(
-                'DATE: $dateDisplay',
-                style: AppTheme.caption.copyWith(
-                  color: Palette.cyan,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Seed #${challenge.seed}',
-                style: AppTheme.caption.copyWith(
-                  color: Palette.muted,
-                  fontSize: 12,
-                ),
               ),
 
               const Spacer(flex: 1),
@@ -218,31 +197,6 @@ class DailyChallengeScreen extends StatelessWidget {
               ),
 
               const Spacer(flex: 2),
-
-              // UI Note: uses device date, no server (§20.4)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Palette.bgDeep,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Palette.muted.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline_rounded, color: Palette.muted, size: 18),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Note: Daily Challenge uses device date. Obstacles and goals are seeded identically all day.',
-                        style: AppTheme.caption.copyWith(
-                          color: Palette.muted,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
 
               const SizedBox(height: 12),
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../audio/audio_service.dart';
 import '../../core/palette.dart';
 import '../../core/theme.dart';
 import '../../data/save_service.dart';
@@ -40,6 +41,7 @@ class _PauseOverlayState extends State<PauseOverlay> {
     setState(() {
       _sound = !_sound;
       _save.setSoundEnabled(_sound);
+      AudioService.instance.onSoundEnabledChanged(_sound);
     });
   }
 

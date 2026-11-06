@@ -31,7 +31,7 @@ object GameSfx {
         .also { it.start() }
     private val sfx = Handler(sfxThread.looper)
 
-    private lateinit var pool: SoundPool
+    private var pool: SoundPool? = null
 
     // soundId map – written and read only on sfxThread (no lock needed).
     private val ids = HashMap<String, Int>()
@@ -58,13 +58,14 @@ object GameSfx {
                     val sounds = call.argument<List<*>>("sounds") as? List<Map<*, *>>
                         ?: return@setMethodCallHandler
                     sfx.post {
+                        val p = pool ?: return@post
                         sounds.forEach { item ->
                             val name = item["name"] as? String ?: return@forEach
                             val file = item["file"] as? String ?: return@forEach
                             try {
                                 context.assets
                                     .openFd("flutter_assets/assets/audio/$file")
-                                    .use { fd -> ids[name] = pool.load(fd, 1) }
+                                    .use { fd -> ids[name] = p.load(fd, 1) }
                             } catch (_: Exception) {
                                 try {
                                     val cacheFile = java.io.File(context.cacheDir, "sfx_$file")
@@ -73,7 +74,7 @@ object GameSfx {
                                             cacheFile.outputStream().use { output -> input.copyTo(output) }
                                         }
                                     }
-                                    ids[name] = pool.load(cacheFile.absolutePath, 1)
+                                    ids[name] = p.load(cacheFile.absolutePath, 1)
                                 } catch (_: Exception) {
                                 }
                             }
@@ -85,29 +86,58 @@ object GameSfx {
                     val name = call.argument<String>("name") ?: return@setMethodCallHandler
                     val vol = (call.argument<Any>("volume") as? Number)?.toFloat() ?: 0.85f
                     sfx.post {
-                        ids[name]?.let { id -> pool.play(id, vol, vol, 1, 0, 1.0f) }
+                        val p = pool ?: return@post
+                        ids[name]?.let { id -> p.play(id, vol, vol, 1, 0, 1.0f) }
                     }
                 }
 
                 "keepAlive" -> {
                     val enable = call.argument<Boolean>("enable") ?: return@setMethodCallHandler
                     sfx.post {
+                        val p = pool ?: return@post
                         if (enable) {
                             if (keepAliveStream == 0) {
                                 // Loop silence at near-zero volume to keep DAC/mixer awake.
                                 ids["silence.wav"]?.let { id ->
-                                    keepAliveStream = pool.play(id, 0.001f, 0.001f, 0, -1, 1.0f)
+                                    keepAliveStream = p.play(id, 0.001f, 0.001f, 0, -1, 1.0f)
                                 }
                             }
                         } else {
                             if (keepAliveStream != 0) {
-                                pool.stop(keepAliveStream)
+                                p.stop(keepAliveStream)
                                 keepAliveStream = 0
                             }
                         }
                     }
                 }
+
+                "stopAll" -> {
+                    sfx.post {
+                        try {
+                            if (keepAliveStream != 0) {
+                                pool?.stop(keepAliveStream)
+                                keepAliveStream = 0
+                            }
+                            pool?.autoPause()
+                        } catch (_: Exception) {}
+                    }
+                }
             }
+        }
+    }
+
+    /** Call from Activity.onDestroy() to stop audio and release SoundPool. */
+    fun release() {
+        sfx.post {
+            try {
+                if (keepAliveStream != 0) {
+                    pool?.stop(keepAliveStream)
+                    keepAliveStream = 0
+                }
+                pool?.release()
+            } catch (_: Exception) {}
+            pool = null
+            ids.clear()
         }
     }
 }

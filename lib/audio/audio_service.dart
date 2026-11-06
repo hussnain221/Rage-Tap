@@ -337,10 +337,47 @@ class AudioService {
         GameSfx.setKeepAlive(enable: false);
         _keepAliveActive = false;
       }
+      GameSfx.stopAll();
     } else {
       _keepAlivePlayer?.stop().catchError((_) {});
       for (final channel in _channels) {
         channel.stop();
+      }
+    }
+  }
+
+  /// Called when the sound setting changes in settings or pause menu.
+  void onSoundEnabledChanged(bool enabled) {
+    if (_SfxChannel._isTest) return;
+    if (_isAndroid) {
+      _keepAliveActive = enabled;
+      GameSfx.setKeepAlive(enable: enabled);
+      if (!enabled) {
+        GameSfx.stopAll();
+      }
+    } else {
+      if (enabled) {
+        _keepAlivePlayer?.resume().catchError((_) {});
+      } else {
+        _keepAlivePlayer?.stop().catchError((_) {});
+        for (final channel in _channels) {
+          channel.stop();
+        }
+      }
+    }
+  }
+
+  /// Resume keep-alive if sound is enabled and app resumes.
+  void resumeKeepAliveIfEnabled() {
+    if (!SaveService.instance.soundEnabled || !_ready) return;
+    if (_isAndroid) {
+      if (!_keepAliveActive) {
+        _keepAliveActive = true;
+        GameSfx.setKeepAlive(enable: true);
+      }
+    } else {
+      if (_keepAlivePlayer != null && _keepAlivePlayer!.state != PlayerState.playing) {
+        _keepAlivePlayer!.resume().catchError((_) {});
       }
     }
   }
@@ -351,6 +388,7 @@ class AudioService {
     if (_isAndroid) {
       GameSfx.setKeepAlive(enable: false);
       _keepAliveActive = false;
+      GameSfx.stopAll();
     } else {
       try {
         await _keepAlivePlayer?.dispose();

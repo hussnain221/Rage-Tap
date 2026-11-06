@@ -56,9 +56,9 @@ void main() {
       expect(C.admobAppId, 'ca-app-pub-3940256099942544~3347511713');
       expect(C.rewardedAdUnitId, 'ca-app-pub-3940256099942544/5224354917');
       expect(C.interstitialAdUnitId, 'ca-app-pub-3940256099942544/1033173712');
-      expect(C.interstitialsEnabled, isFalse);
-      expect(C.interstitialMinRuns, 4);
-      expect(C.interstitialMinIntervalSec, 180);
+      expect(C.interstitialsEnabled, isTrue);
+      expect(C.interstitialMinRuns, 2);
+      expect(C.interstitialMinIntervalSec, 60);
     });
   });
 
@@ -66,48 +66,47 @@ void main() {
     test('Initial state: no interstitial loaded, runs = 0', () {
       expect(AdsService.instance.isInterstitialLoaded, isFalse);
       expect(AdsService.instance.completedRunsSinceLastInterstitial, 0);
-      expect(AdsService.instance.interstitialsEnabled, isFalse);
+      expect(AdsService.instance.interstitialsEnabled, isTrue);
     });
 
-    test('canShowInterstitial returns false by default (interstitials disabled)', () {
+    test('canShowInterstitial returns false when not loaded', () {
       AdsService.instance.resetTrackingForTesting(
         completedRuns: 10,
         lastTime: DateTime.now().subtract(const Duration(minutes: 10)),
-        isLoaded: true,
+        isLoaded: false,
       );
       expect(AdsService.instance.canShowInterstitial(), isFalse);
     });
 
-    test('canShowInterstitial respects strict limits (runs >= 4 and time >= 3 min)', () {
-      AdsService.instance.setInterstitialsEnabledForTesting(true);
+    test('canShowInterstitial respects strict limits (runs >= minRuns and time >= minInterval)', () {
       final baseTime = DateTime(2026, 10, 30, 12, 0, 0);
 
       // 1. Not loaded -> false
       AdsService.instance.resetTrackingForTesting(
-        completedRuns: 4,
+        completedRuns: 2,
         lastTime: baseTime,
         isLoaded: false,
       );
       expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isFalse);
 
-      // 2. Loaded, but completed runs < 4 -> false
+      // 2. Loaded, but completed runs < 2 -> false
       AdsService.instance.resetTrackingForTesting(
-        completedRuns: 3,
+        completedRuns: 1,
         lastTime: baseTime,
         isLoaded: true,
       );
       expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isFalse);
 
-      // 3. Loaded, runs >= 4, but elapsed time < 180s (e.g. 179s) -> false
+      // 3. Loaded, runs >= 2, but elapsed time < 60s (e.g. 59s) -> false
       AdsService.instance.resetTrackingForTesting(
-        completedRuns: 4,
+        completedRuns: 2,
         lastTime: baseTime,
         isLoaded: true,
       );
-      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 179))), isFalse);
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 59))), isFalse);
 
-      // 4. Loaded, runs >= 4, and elapsed time >= 180s -> true
-      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 180))), isTrue);
+      // 4. Loaded, runs >= 2, and elapsed time >= 60s -> true
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 60))), isTrue);
       expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isTrue);
     });
 
@@ -244,6 +243,7 @@ void main() {
     });
 
     testWidgets('Tapping RETRY when interstitials are disabled works instantly', (tester) async {
+      AdsService.instance.setInterstitialsEnabledForTesting(false);
       final game = RageTapGame(seed: 42);
       game.state.value = GameState.results;
 

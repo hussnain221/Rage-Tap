@@ -575,6 +575,7 @@ class RageTapGame extends FlameGame {
   }
 
   void disposeGame() {
+    pauseEngine();
     if (score.value > _saveService.bestScore) {
       _saveService.setBestIfHigher(score.value);
     }

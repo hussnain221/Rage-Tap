@@ -67,6 +67,12 @@ class _ResultsOverlayState extends State<ResultsOverlay>
   void initState() {
     super.initState();
     AdsService.instance.recordRunCompleted();
+    if (!AdsService.instance.isRewardedLoaded) {
+      AdsService.instance.loadRewardedAd();
+    }
+    if (AdsService.instance.interstitialsEnabled && !AdsService.instance.isInterstitialLoaded) {
+      AdsService.instance.loadInterstitialAd();
+    }
 
     final result = widget.game.lastResult;
     final isNewBest = widget.game.isNewBest.value;
@@ -351,9 +357,6 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                   valueListenable: AdsService.instance.isRewardedLoadedNotifier,
                   builder: (context, isLoaded, _) {
                     final doubleBonus = math.max(coins, 5);
-                    if (!isLoaded && !_adRewardClaimed) {
-                      return const SizedBox.shrink();
-                    }
                     if (_adRewardClaimed) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -380,6 +383,9 @@ class _ResultsOverlayState extends State<ResultsOverlay>
                           ),
                         ),
                       );
+                    }
+                    if (!isLoaded) {
+                      return const SizedBox.shrink();
                     }
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../audio/audio_service.dart';
 import '../../core/constants.dart';
 import '../../core/palette.dart';
 import '../../core/theme.dart';
@@ -61,6 +62,7 @@ Contact: stormlogix1@gmail.com
   Future<void> _toggleSound(bool value) async {
     setState(() => _soundEnabled = value);
     await _saveService.setSoundEnabled(value);
+    AudioService.instance.onSoundEnabledChanged(value);
   }
 
   Future<void> _toggleHaptics(bool value) async {

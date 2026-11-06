@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rage_tap/core/constants.dart';
 import 'package:rage_tap/data/save_service.dart';
 import 'package:rage_tap/ui/screens/home_screen.dart';
 import 'package:rage_tap/ui/widgets/home_zap.dart';
@@ -37,7 +38,7 @@ void main() {
     expect(find.text('456'), findsOneWidget);
     expect(find.text('88'), findsOneWidget);
     expect(find.byIcon(Icons.monetization_on_rounded), findsOneWidget);
-    expect(find.text('v1.0.0'), findsOneWidget);
+    expect(find.text(C.appVersion), findsOneWidget);
     expect(find.byType(NeonIconButton), findsNWidgets(2));
 
     // Tap PLAY -> navigate to /game

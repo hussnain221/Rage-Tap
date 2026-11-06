@@ -106,6 +106,7 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _debugTimer?.cancel();
     _debugNotifier?.dispose();
     if (widget.game == null) {
+      _game.pauseEngine();
       _game.disposeGame();
     }
     super.dispose();
@@ -120,6 +121,8 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         _game.pause();
       }
       AudioService.instance.stopAll();
+    } else if (state == AppLifecycleState.detached) {
+      AudioService.instance.dispose();
     }
   }
 
@@ -160,7 +163,7 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           case GameState.paused:
           case GameState.ready:
           case GameState.results:
-            Navigator.of(context).maybePop();
+            Navigator.of(context).pop();
             break;
           case GameState.dying:
             // Ignore back during 0.42s death sequence so run results finalize cleanly
