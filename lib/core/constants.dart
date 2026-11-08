@@ -119,8 +119,8 @@ class C {
   static const String rewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
   static const String interstitialAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
   static const bool interstitialsEnabled = true;
-  static const int interstitialMinRuns = 2;
-  static const int interstitialMinIntervalSec = 60;
+  static const int interstitialMinRuns = 4;
+  static const int interstitialMinIntervalSec = 180;
 
   // Metadata & Links
   static const String privacyPolicyUrl =

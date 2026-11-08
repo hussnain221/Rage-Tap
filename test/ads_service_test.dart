@@ -57,8 +57,8 @@ void main() {
       expect(C.rewardedAdUnitId, 'ca-app-pub-3940256099942544/5224354917');
       expect(C.interstitialAdUnitId, 'ca-app-pub-3940256099942544/1033173712');
       expect(C.interstitialsEnabled, isTrue);
-      expect(C.interstitialMinRuns, 2);
-      expect(C.interstitialMinIntervalSec, 60);
+      expect(C.interstitialMinRuns, 4);
+      expect(C.interstitialMinIntervalSec, 180);
     });
   });
 
@@ -83,30 +83,30 @@ void main() {
 
       // 1. Not loaded -> false
       AdsService.instance.resetTrackingForTesting(
-        completedRuns: 2,
+        completedRuns: 4,
         lastTime: baseTime,
         isLoaded: false,
       );
       expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isFalse);
 
-      // 2. Loaded, but completed runs < 2 -> false
+      // 2. Loaded, but completed runs < 4 -> false
       AdsService.instance.resetTrackingForTesting(
-        completedRuns: 1,
+        completedRuns: 3,
         lastTime: baseTime,
         isLoaded: true,
       );
       expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isFalse);
 
-      // 3. Loaded, runs >= 2, but elapsed time < 60s (e.g. 59s) -> false
+      // 3. Loaded, runs >= 4, but elapsed time < 180s (e.g. 179s) -> false
       AdsService.instance.resetTrackingForTesting(
-        completedRuns: 2,
+        completedRuns: 4,
         lastTime: baseTime,
         isLoaded: true,
       );
-      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 59))), isFalse);
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 179))), isFalse);
 
-      // 4. Loaded, runs >= 2, and elapsed time >= 60s -> true
-      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 60))), isTrue);
+      // 4. Loaded, runs >= 4, and elapsed time >= 180s -> true
+      expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(seconds: 180))), isTrue);
       expect(AdsService.instance.canShowInterstitial(now: baseTime.add(const Duration(minutes: 5))), isTrue);
     });
 
