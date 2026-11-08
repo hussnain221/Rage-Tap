@@ -34,6 +34,7 @@ class _ResultsOverlayState extends State<ResultsOverlay>
   late final String _message;
   late final List<_ConfettiParticle> _confetti;
   bool _retrying = false;
+  bool _homePressed = false;
   bool _adRewardClaimed = false;
   int _bonusCoinsGranted = 0;
 
@@ -50,12 +51,15 @@ class _ResultsOverlayState extends State<ResultsOverlay>
   }
 
   void _onHome() {
+    if (_homePressed) return;
+    _homePressed = true;
+    widget.game.pauseEngine();
     AdsService.instance.showInterstitialIfEligible(
       onAction: () {
         if (mounted) {
           if (widget.onHomePressed != null) {
             widget.onHomePressed!();
-          } else {
+          } else if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
         }

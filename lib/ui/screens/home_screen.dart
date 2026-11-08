@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../../audio/audio_service.dart';
 import '../../core/constants.dart';
 import '../../core/palette.dart';
 import '../../core/theme.dart';
@@ -9,12 +11,47 @@ import '../widgets/logo.dart';
 import '../widgets/neon_button.dart';
 
 /// The game's Home screen per spec §12.2.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  DateTime? _lastBackPressTime;
+  bool _isExiting = false;
+
+  void _onPopInvoked(bool didPop) {
+    if (didPop || _isExiting) return;
+    final now = DateTime.now();
+    if (_lastBackPressTime == null ||
+        now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+      _lastBackPressTime = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Press back again to exit',
+            style: TextStyle(color: Colors.white),
+          ),
+          duration: Duration(seconds: 2),
+          backgroundColor: Palette.bgPurple,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else {
+      _isExiting = true;
+      AudioService.instance.stopAll();
+      SystemNavigator.pop();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) => _onPopInvoked(didPop),
+      child: Scaffold(
       backgroundColor: Palette.bgDeep,
       body: SafeArea(
         child: LayoutBuilder(
@@ -181,6 +218,7 @@ class HomeScreen extends StatelessWidget {
           },
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

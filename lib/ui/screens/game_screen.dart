@@ -57,6 +57,7 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   Timer? _debugTimer;
   int? _activePointerId;
   bool _initialized = false;
+  bool _isExiting = false;
 
   RageTapGame get game => _game;
 
@@ -152,18 +153,20 @@ class GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
+        if (didPop || _isExiting) return;
         switch (_game.state.value) {
           case GameState.playing:
-            _game.pause();
-            break;
           case GameState.resuming:
             _game.pause();
             break;
           case GameState.paused:
           case GameState.ready:
           case GameState.results:
-            Navigator.of(context).pop();
+            _isExiting = true;
+            _game.pauseEngine();
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
             break;
           case GameState.dying:
             // Ignore back during 0.42s death sequence so run results finalize cleanly

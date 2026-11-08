@@ -9,6 +9,11 @@ class MainActivity : FlutterActivity() {
         GameSfx.register(flutterEngine.dartExecutor.binaryMessenger, this)
     }
 
+    override fun onPause() {
+        super.onPause()
+        GameSfx.stopAll()
+    }
+
     override fun onDestroy() {
         GameSfx.release()
         super.onDestroy()

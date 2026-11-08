@@ -112,17 +112,22 @@ object GameSfx {
                 }
 
                 "stopAll" -> {
-                    sfx.post {
-                        try {
-                            if (keepAliveStream != 0) {
-                                pool?.stop(keepAliveStream)
-                                keepAliveStream = 0
-                            }
-                            pool?.autoPause()
-                        } catch (_: Exception) {}
-                    }
+                    stopAll()
                 }
             }
+        }
+    }
+
+    /** Call from Activity.onPause() or Dart stopAll() to pause streams and silence keep-alive. */
+    fun stopAll() {
+        sfx.post {
+            try {
+                if (keepAliveStream != 0) {
+                    pool?.stop(keepAliveStream)
+                    keepAliveStream = 0
+                }
+                pool?.autoPause()
+            } catch (_: Exception) {}
         }
     }
 

@@ -27,6 +27,7 @@ class PauseOverlay extends StatefulWidget {
 class _PauseOverlayState extends State<PauseOverlay> {
   late bool _sound;
   late bool _haptics;
+  bool _homePressed = false;
 
   SaveService get _save => widget.saveService ?? SaveService.instance;
 
@@ -119,13 +120,16 @@ class _PauseOverlayState extends State<PauseOverlay> {
               width: 260,
               height: 48,
               onPressed: () {
+                if (_homePressed) return;
+                _homePressed = true;
+                widget.game.pauseEngine();
                 if (widget.game.score.value > widget.game.bestScore.value) {
                   widget.game.bestScore.value = widget.game.score.value;
                 }
                 _save.setBestIfHigher(widget.game.score.value);
                 if (widget.onHomePressed != null) {
                   widget.onHomePressed!();
-                } else {
+                } else if (Navigator.of(context).canPop()) {
                   Navigator.of(context).pop();
                 }
               },
