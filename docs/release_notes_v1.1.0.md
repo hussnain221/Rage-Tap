@@ -1,4 +1,4 @@
-# Rage Tap — Release Notes v1.1.0 (Version Code 5)
+# Rage Tap — Release Notes v1.1.0 (Version Code 6)
 
 ## Play Console Release Notes (What's New in this Release)
 *Under 500 characters, ready to paste directly into Google Play Console:*
