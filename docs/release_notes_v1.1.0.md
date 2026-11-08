@@ -1,15 +1,16 @@
-# Rage Tap — Release Notes v1.1.0 (Version Code 4)
+# Rage Tap — Release Notes v1.1.0 (Version Code 5)
 
 ## Play Console Release Notes (What's New in this Release)
 *Under 500 characters, ready to paste directly into Google Play Console:*
 
 ```text
-Welcome to Rage Tap v1.1.0!
+What's new in Rage Tap v1.1.0:
+• Stability & Controls: Resolved back button navigation lag and fixed app close freezing.
 • Rage Meter: Chain near-misses to unleash high-speed Rage Mode!
-• Coins & Shop: Earn coins during runs and unlock 6 custom character skins (Blaze, Pixel, Ghost, Bolt, Royal)!
-• Daily Challenge: New seeded course every day with special rewards.
-• Optional Rewarded Ads: Double your coins on the results screen.
-• Performance optimizations and smoother controls.
+• Coins & Shop: Earn coins and unlock 6 custom character skins.
+• Daily Challenge: New seeded course and rewards every day.
+• Audio & Ads: Instant sound toggling, smoother playback, and balanced ad pacing.
+• General performance optimizations for all Android devices.
 ```
 
 ---
